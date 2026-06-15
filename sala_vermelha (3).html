@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sala Vermelha PR2 — Emergências Médicas</title>
+<style>
+:root{
+  --bg:#1a1614; --surface:#221c19; --surface-2:#2b2320; --raise:#332a25;
+  --ink:#ece4d8; --ink-dim:#a89684; --ink-faint:#7d6e60;
+  --line:#3a302a; --line-soft:#2f2722;
+  --clay:#c87f56; --clay-soft:#a86a48;
+  --oxblood:#b23a2e; --oxblood-deep:#7e271f;
+  --sage:#8b9a73; --sage-deep:#6f7d5a;
+  --gold:#c9a24b;
+  --serif:Georgia,'Times New Roman',serif;
+  --mono:'SFMono-Regular',ui-monospace,'Cascadia Mono','Courier New',monospace;
+  --r:10px; --maxw:780px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--serif);
+  font-size:17px; line-height:1.62; -webkit-font-smoothing:antialiased;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:28px 22px 90px}
+h1,h2,h3{font-weight:normal; line-height:1.2; margin:0}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
+.mono{font-family:var(--mono)}
+.dim{color:var(--ink-dim)}
+.faint{color:var(--ink-faint)}
+a{color:var(--clay)}
+
+/* ---------- top brand ---------- */
+.brand{display:flex; align-items:center; gap:13px; margin-bottom:6px}
+.brand .pulse{width:11px;height:11px;border-radius:50%;background:var(--oxblood);
+  box-shadow:0 0 0 0 rgba(178,58,46,.55); animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(178,58,46,.5)}70%{box-shadow:0 0 0 9px rgba(178,58,46,0)}100%{box-shadow:0 0 0 0 rgba(178,58,46,0)}}
+.brand .title{font-size:14px; letter-spacing:.28em; text-transform:uppercase; color:var(--ink-dim)}
+.lede{font-size:30px; letter-spacing:-.01em; margin:14px 0 4px}
+.lede em{font-style:italic; color:var(--clay)}
+.sub{color:var(--ink-dim); font-size:16px; max-width:54ch}
+
+/* ---------- hub cards ---------- */
+.hubgrid{margin-top:30px; display:flex; flex-direction:column; gap:12px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  padding:18px 20px; display:flex; align-items:center; gap:16px; text-align:left; width:100%;
+  transition:border-color .18s, background .18s, transform .12s}
+.card:hover{border-color:var(--clay-soft); background:var(--surface-2)}
+.card:active{transform:translateY(1px)}
+.card .glyph{font-family:var(--mono); font-size:13px; color:var(--clay);
+  border:1px solid var(--line); border-radius:7px; width:42px; height:42px; flex:0 0 42px;
+  display:flex; align-items:center; justify-content:center; letter-spacing:.04em}
+.card .body{flex:1; min-width:0}
+.card .name{font-size:19px}
+.card .desc{color:var(--ink-dim); font-size:14.5px; margin-top:2px}
+.card .meta{font-family:var(--mono); font-size:11.5px; color:var(--ink-faint); letter-spacing:.03em; margin-top:5px; text-transform:uppercase}
+.card .chev{color:var(--ink-faint); font-size:20px}
+
+/* ---------- back / header bar ---------- */
+.topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; gap:12px}
+.back{font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; color:var(--ink-dim);
+  text-transform:uppercase; display:inline-flex; align-items:center; gap:7px}
+.back:hover{color:var(--clay)}
+.modetag{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-faint); border:1px solid var(--line); padding:4px 9px; border-radius:20px}
+
+/* ---------- patient monitor strip (signature) ---------- */
+.monitor{background:linear-gradient(180deg,#15110f,#1d1714); border:1px solid var(--line);
+  border-radius:var(--r); padding:13px 8px; margin-bottom:18px; position:relative; overflow:hidden}
+.monitor::after{content:""; position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px)}
+.vitrow{display:flex; flex-wrap:wrap; gap:4px 0; justify-content:space-around}
+.vital{flex:1 1 70px; text-align:center; padding:3px 6px; position:relative; z-index:1}
+.vital .lab{font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; color:var(--ink-faint); text-transform:uppercase}
+.vital .val{font-family:var(--mono); font-size:23px; line-height:1.1; color:var(--sage); margin-top:1px}
+.vital .val .u{font-size:11px; color:var(--ink-faint)}
+.vital.crit .val{color:var(--oxblood); animation:blink 1.3s steps(2,start) infinite}
+.vital.warn .val{color:var(--gold)}
+@keyframes blink{50%{opacity:.45}}
+
+/* ---------- case prose ---------- */
+.casehead{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:4px}
+.casehead .who{font-size:21px}
+.casehead .chip{font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--clay);
+  border:1px solid var(--clay-soft); border-radius:14px; padding:2px 9px; text-transform:uppercase}
+.narr{color:var(--ink); font-size:17px; margin:12px 0}
+.narr .hl{color:var(--clay)}
+.exam{background:var(--surface); border-left:2px solid var(--line); padding:11px 15px; border-radius:0 8px 8px 0; margin:14px 0; font-size:15.5px; color:var(--ink-dim)}
+.exam b{color:var(--ink); font-weight:normal}
+
+/* ---------- step / question ---------- */
+.step{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:18px 18px 16px; margin:14px 0}
+.step .etapa{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint)}
+.step .q{font-size:18.5px; margin:6px 0 14px}
+.field{display:flex; gap:9px; flex-wrap:wrap}
+.field input[type=text]{flex:1; min-width:0; background:var(--bg); border:1px solid var(--line);
+  border-radius:8px; color:var(--ink); font-family:var(--serif); font-size:16.5px; padding:12px 14px}
+.field input:focus{outline:none; border-color:var(--clay)}
+.btn{background:var(--clay); color:#1a1410; border-radius:8px; padding:12px 18px; font-size:15px;
+  font-family:var(--mono); letter-spacing:.05em; text-transform:uppercase; transition:background .15s}
+.btn:hover{background:#d68d62}
+.btn.ghost{background:transparent; border:1px solid var(--line); color:var(--ink-dim)}
+.btn.ghost:hover{border-color:var(--clay); color:var(--clay)}
+.btn:disabled{opacity:.4; cursor:default}
+.btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; align-items:center}
+
+/* ---------- choices ---------- */
+.choices{display:flex; flex-direction:column; gap:9px; margin-top:6px}
+.choice{background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:12px 15px;
+  text-align:left; font-size:16px; display:flex; gap:11px; align-items:flex-start; transition:border-color .15s, background .15s}
+.choice:hover{border-color:var(--clay-soft)}
+.choice .k{font-family:var(--mono); color:var(--clay); flex:0 0 auto}
+.choice.correct{border-color:var(--sage-deep); background:rgba(139,154,115,.1)}
+.choice.wrong{border-color:var(--oxblood-deep); background:rgba(178,58,46,.09)}
+.choice.disabled{pointer-events:none; opacity:.85}
+
+/* ---------- feedback (preceptor voice) ---------- */
+.feedback{border-radius:var(--r); padding:15px 17px; margin-top:14px; font-size:16px; border:1px solid var(--line)}
+.feedback .who{font-family:var(--mono); font-size:11px; letter-spacing:.13em; text-transform:uppercase; display:block; margin-bottom:6px}
+.feedback.good{background:rgba(139,154,115,.09); border-color:var(--sage-deep)}
+.feedback.good .who{color:var(--sage)}
+.feedback.part{background:rgba(201,162,75,.08); border-color:#8a722f}
+.feedback.part .who{color:var(--gold)}
+.feedback.miss{background:rgba(178,58,46,.08); border-color:var(--oxblood-deep)}
+.feedback.miss .who{color:var(--oxblood)}
+
+/* ---------- results / labs ---------- */
+.labpanel{background:var(--surface-2); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px; margin:14px 0}
+.labpanel .cap{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:9px}
+.labgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px 14px}
+.lab{font-family:var(--mono); font-size:14px}
+.lab .n{color:var(--ink-faint); font-size:11px; display:block; letter-spacing:.04em}
+.lab .v{color:var(--ink); font-size:16px}
+.lab .v.hi{color:var(--oxblood)} .lab .v.lo{color:var(--gold)}
+
+/* ---------- ECG ---------- */
+.ecgbox{background:#120e0c; border:1px solid var(--line); border-radius:var(--r); padding:6px; margin:14px 0; position:relative}
+.ecgbox svg{display:block; width:100%; height:auto}
+.ecgbox .lead{position:absolute; top:8px; left:12px; font-family:var(--mono); font-size:10px; color:var(--sage-deep); letter-spacing:.1em}
+.ecgline{fill:none; stroke:var(--sage); stroke-width:1.6; stroke-linejoin:round; stroke-linecap:round}
+.ecggrid{stroke:rgba(178,58,46,.13); stroke-width:.5}
+@media (prefers-reduced-motion:no-preference){
+  .ecgline.draw{stroke-dasharray:4000; stroke-dashoffset:4000; animation:trace 2.6s ease-out forwards}
+}
+@keyframes trace{to{stroke-dashoffset:0}}
+
+/* ---------- resumo PR2 ---------- */
+.resumo{background:linear-gradient(180deg,var(--surface-2),var(--surface)); border:1px solid var(--clay-soft);
+  border-radius:var(--r); padding:20px; margin:16px 0}
+.resumo h3{font-size:14px; font-family:var(--mono); letter-spacing:.18em; text-transform:uppercase; color:var(--clay); margin-bottom:12px}
+.resumo dl{margin:0} .resumo dt{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); margin-top:12px}
+.resumo dd{margin:3px 0 0; font-size:16px}
+.resumo .pega{color:var(--gold)}
+
+/* ---------- progress / chips ---------- */
+.scorebar{font-family:var(--mono); font-size:12px; color:var(--ink-faint); letter-spacing:.05em; margin-top:6px}
+.pillrow{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0}
+.pill{font-family:var(--mono); font-size:11px; letter-spacing:.05em; text-transform:uppercase;
+  border:1px solid var(--line); border-radius:16px; padding:5px 11px; color:var(--ink-dim); background:var(--surface)}
+.pill.on{border-color:var(--clay-soft); color:var(--clay)}
+.pill.done{border-color:var(--sage-deep); color:var(--sage)}
+
+/* ---------- list (library / picker) ---------- */
+.list{display:flex; flex-direction:column; gap:9px; margin-top:14px}
+.litem{background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:14px 16px; text-align:left; width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; transition:border-color .15s}
+.litem:hover{border-color:var(--clay-soft)}
+.litem .t{font-size:16.5px}
+.litem .s{font-family:var(--mono); font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em}
+.litem .tag{font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--clay); border:1px solid var(--line); border-radius:12px; padding:3px 8px}
+.litem.solved{opacity:.78} .litem.solved .t::before{content:"✓ "; color:var(--sage)}
+
+/* ---------- calculator ---------- */
+.calc label{display:block; font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin:14px 0 5px}
+.calc input,.calc select{width:100%; background:var(--bg); border:1px solid var(--line); border-radius:8px; color:var(--ink); font-family:var(--mono); font-size:16px; padding:11px 13px}
+.calc input:focus,.calc select:focus{outline:none; border-color:var(--clay)}
+.bodymap{display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-top:6px}
+.bodybtn{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:9px 6px; font-size:13px; text-align:center; transition:border-color .15s}
+.bodybtn .pct{font-family:var(--mono); font-size:11px; color:var(--ink-faint); display:block}
+.bodybtn.sel{border-color:var(--clay); background:rgba(200,127,86,.12)}
+.calcout{background:var(--surface-2); border:1px solid var(--clay-soft); border-radius:var(--r); padding:18px; margin-top:18px; font-family:var(--mono)}
+.calcout .big{font-size:30px; color:var(--clay)} .calcout .lab{font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.1em}
+.calcout .row{display:flex; justify-content:space-between; padding:7px 0; border-top:1px solid var(--line-soft); font-size:14px}
+.calcout .row:first-of-type{border-top:none}
+
+/* ---------- misc ---------- */
+.note{font-size:13.5px; color:var(--ink-faint); border-left:2px solid var(--line); padding:4px 0 4px 13px; margin:14px 0}
+hr.sep{border:none; border-top:1px solid var(--line-soft); margin:22px 0}
+.center{text-align:center}
+.bigscore{font-family:var(--mono); font-size:46px; color:var(--clay); text-align:center; margin:10px 0}
+.disclaimer{font-size:12px; color:var(--ink-faint); margin-top:40px; border-top:1px solid var(--line-soft); padding-top:16px; line-height:1.5}
+@media(max-width:480px){
+  .lede{font-size:25px} .wrap{padding:22px 16px 80px}
+  .vital .val{font-size:19px}
+}
+
+/* ---------- camada preceptor (didática) — reaproveita os tokens existentes ---------- */
+.teach{background:var(--surface-2); border:1px solid var(--line); border-radius:var(--r); padding:2px 17px 15px; margin-top:13px}
+.teach-sec{padding:13px 0 3px; border-top:1px solid var(--line-soft)}
+.teach-sec:first-child{border-top:none}
+.tlabel{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--clay); display:block; margin-bottom:6px}
+.teach-sec p{margin:0; font-size:15.5px; color:var(--ink); line-height:1.55}
+.think{margin:0; padding:0; list-style:none}
+.think li{position:relative; padding:5px 0 5px 18px; font-size:15px; color:var(--ink-dim); line-height:1.5}
+.think li::before{content:"↳"; position:absolute; left:0; color:var(--sage-deep)}
+.decore{background:rgba(200,127,86,.08); border:1px solid var(--clay-soft); border-radius:9px; padding:12px 15px; margin-top:12px}
+.decore .tlabel{color:var(--clay)}
+.decore ul{margin:4px 0 0; padding:0; list-style:none}
+.decore li{position:relative; padding-left:16px; font-family:var(--mono); font-size:13.5px; color:var(--ink); margin-bottom:4px; line-height:1.45}
+.decore li::before{content:"›"; position:absolute; left:0; color:var(--clay)}
+.teach-btns{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+.tbtn{font-family:var(--mono); font-size:11px; letter-spacing:.04em; text-transform:uppercase; border:1px solid var(--line); border-radius:18px; padding:8px 13px; color:var(--ink-dim); background:var(--surface); transition:border-color .15s,color .15s}
+.tbtn:hover{border-color:var(--clay); color:var(--clay)}
+.treveal{display:none; margin-top:11px; padding:13px 15px; border-radius:9px; font-size:15px; line-height:1.55; color:var(--ink); border:1px solid var(--line); border-left:3px solid var(--sage-deep); background:rgba(139,154,115,.07)}
+.treveal b{color:var(--ink); font-weight:normal}
+.treveal.simples{border-left-color:var(--gold); background:rgba(201,162,75,.07)}
+.treveal.erro{border-left-color:var(--oxblood); background:rgba(178,58,46,.08)}
+.fluxo{font-family:var(--mono); font-size:13px; line-height:1.45; text-align:center; color:var(--ink); background:#120e0c; border:1px solid var(--line); border-radius:var(--r); padding:16px 12px; margin-top:10px}
+.fluxo .fstep{display:block; padding:2px 0}
+.fluxo .farr{display:block; color:var(--clay); margin:1px 0}
+.fluxo .fstep.q{color:var(--gold)}
+.fluxo .fstep.end{color:var(--sage)}
+
+/* ---------- 📋 Dados disponíveis — painel fixo e recolhível ---------- */
+.dados{position:sticky; top:8px; z-index:30; background:var(--surface); border:1px solid var(--clay-soft); border-radius:var(--r); margin:14px 0 18px; box-shadow:0 8px 24px rgba(0,0,0,.4); overflow:hidden}
+.dados-head{display:flex; width:100%; justify-content:space-between; align-items:center; padding:11px 15px; background:var(--surface-2); border:none; cursor:pointer}
+.dh-t{font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--clay)}
+.dh-c{color:var(--clay); font-size:13px}
+.dados-body{padding:13px 15px; max-height:46vh; overflow-y:auto}
+.dados-body .monitor{margin:0 0 2px}
+.dados-body .cap{font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:7px}
+.ddiv{border:none; border-top:1px solid var(--line-soft); margin:13px 0}
+.dnote{font-size:14.5px; color:var(--ink-dim); margin:0; line-height:1.5}
+.dados-empty{font-size:14px; color:var(--ink-faint); margin:0; font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+/* ============================================================
+   SALA VERMELHA PR2 — conteúdo 100% baseado no livro
+   Medicina de Emergência: Abordagem Prática, USP HC-FMUSP, 18ª ed.
+   Estilo de cobrança calibrado pelas provas CITTÁ + Desafio Sala Vermelha.
+   ============================================================ */
+
+/* ---------- storage (offline-safe, nunca quebra) ---------- */
+const Store=(()=>{let mem={};try{const k='_sv_t';localStorage.setItem(k,'1');localStorage.removeItem(k);
+  return{get:k=>{try{return localStorage.getItem(k)}catch(e){return mem[k]??null}},
+         set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};}
+  catch(e){return{get:k=>mem[k]??null,set:(k,v)=>{mem[k]=v}};}})();
+function loadProgress(){try{return JSON.parse(Store.get('sv_prog')||'{}')}catch(e){return{}}}
+function saveProgress(p){Store.set('sv_prog',JSON.stringify(p))}
+let PROG=loadProgress();
+function markSolved(kind,id){PROG[kind]=PROG[kind]||{};PROG[kind][id]=true;saveProgress(PROG)}
+function isSolved(kind,id){return !!(PROG[kind]&&PROG[kind][id])}
+function countSolved(kind){return PROG[kind]?Object.keys(PROG[kind]).length:0}
+
+/* ---------- answer engine (permissivo) ---------- */
+function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();}
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;
+  let d=Array.from({length:m+1},(_,i)=>[i,...Array(n).fill(0)]);
+  for(let j=0;j<=n;j++)d[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++){const c=a[i-1]===b[j-1]?0:1;
+    d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+c);}return d[m][n];}
+function fuzzyHas(input,term){
+  const I=norm(input),T=norm(term);if(!T)return false;
+  if(I.includes(T))return true;                       // entrada contém o termo inteiro (cobre abreviações listadas e termos compostos)
+  const it=I.split(' ').filter(Boolean),tt=T.split(' ').filter(Boolean);
+  return tt.every(tk=>it.some(iw=>{
+    if(iw===tk)return true;
+    if(tk.length>=4 && iw.includes(tk))return true;   // palavra digitada contém o token do termo (ex.: "cardioversao" ⊃ "cardioversao")
+    if(iw.length>=4 && tk.startsWith(iw))return true;   // prefixo/abreviação ≥4 letras (ex.: "nora" → "noradrenalina"); prefixo evita "ventricular" casar com "supraventricular"
+    const tol = tk.length>8?2 : tk.length>5?1 : 0;     // tolerância de erro de digitação; tol≤1 em palavras médias evita colisão estável/instável
+    return tol>0 && lev(iw,tk)<=tol;
+  }));
+}
+function anyHas(input,terms){return (terms||[]).some(t=>fuzzyHas(input,t));}
+// grade open answer -> 'good' | 'part' | 'miss'
+function gradeOpen(input,q){
+  if(q.reject&&anyHas(input,q.reject))return 'miss';
+  if(anyHas(input,q.accept))return 'good';
+  if(q.partial&&anyHas(input,q.partial))return 'part';
+  return 'miss';
+}
+
+/* ---------- ECG generator (SVG) ---------- */
+function ecgSVG(type,lead){
+  const W=660,H=130,base=70;lead=lead||'DII';
+  // grid
+  let grid='';for(let x=0;x<=W;x+=22)grid+=`<line class="ecggrid" x1="${x}" y1="0" x2="${x}" y2="${H}"/>`;
+  for(let y=0;y<=H;y+=22)grid+=`<line class="ecggrid" x1="0" y1="${y}" x2="${W}" y2="${y}"/>`;
+  const cfg={
+    sinus:{rate:170,p:1,qrsW:8,t:1,amp:34},
+    brady:{rate:300,p:1,qrsW:8,t:1,amp:34},
+    taqsinus:{rate:120,p:1,qrsW:8,t:1,amp:30},
+    fa:{rate:150,p:0,qrsW:8,t:1,amp:32,irr:1,fib:1},
+    flutter:{rate:120,p:0,qrsW:8,t:0,amp:30,saw:1},
+    tsv:{rate:96,p:0,qrsW:7,t:1,amp:30},
+    tv:{rate:118,p:0,qrsW:26,t:0,amp:40,wide:1},
+    fv:{fvf:1},
+    bav1:{rate:185,p:1,qrsW:8,t:1,amp:34,prlong:1},
+    bav2m1:{rate:185,p:1,qrsW:8,t:1,amp:34,wenck:1},
+    bav3:{rate:0,bav3:1},
+    stemi:{rate:185,p:1,qrsW:8,t:1,amp:34,st:1},
+    bavhi:{rate:330,p:1,qrsW:8,t:1,amp:34,drop:1}
+  }[type]||{rate:170,p:1,qrsW:8,t:1,amp:34};
+  let pts=[];let x=8;
+  const push=(xx,yy)=>pts.push([xx,base-yy]);
+  if(cfg.fvf){ // VF chaotic
+    push(8,0);for(let xx=10;xx<W-6;xx+=6){const y=(Math.sin(xx*0.5)+Math.sin(xx*0.23)*0.7+Math.sin(xx*0.9)*0.5)*22*(0.6+0.4*Math.random());push(xx,y);}push(W-6,0);
+  } else if(cfg.bav3){ // independent P (fast) and QRS (slow)
+    // draw QRS slow regular
+    const qrsInt=200;let q=40;const qpos=[];while(q<W-20){qpos.push(q);q+=qrsInt;}
+    // P waves faster, independent
+    const pInt=92;let p=20;const ppos=[];while(p<W-10){ppos.push(p);p+=pInt;}
+    push(8,0);
+    for(let xx=8;xx<W-6;xx+=2){let y=0;
+      ppos.forEach(pp=>{const d=xx-pp;if(d>-7&&d<7)y+=8*Math.cos(d/7*Math.PI/2);});
+      qpos.forEach(qq=>{const d=xx-qq;if(d>=-4&&d<0)y-=10;else if(d>=0&&d<4)y+=34;else if(d>=4&&d<8)y-=10;});
+      push(xx,y);}
+  } else {
+    push(8,0);
+    let cyc=cfg.rate;let beat=0;let dropNext=false;let pr=22;
+    while(x<W-cfg.qrsW-30){
+      let thisCyc=cyc;
+      if(cfg.irr)thisCyc=cyc*(0.7+Math.random()*0.6); // FA irregular
+      if(cfg.wenck){pr=22+beat%4*9;if(beat%4===3){/* dropped QRS */ } }
+      // fibrillatory / sawtooth baseline before QRS
+      const segStart=x;
+      if(cfg.fib){for(let xx=x;xx<x+thisCyc-cfg.qrsW-20;xx+=5){push(xx,(Math.random()-0.5)*7);}x+=Math.max(0,thisCyc-cfg.qrsW-20);}
+      else if(cfg.saw){for(let xx=x;xx<x+thisCyc-cfg.qrsW-16;xx+=8){const ph=((xx-segStart)%26)/26;push(xx,-(ph*14-7));}x+=Math.max(0,thisCyc-cfg.qrsW-16);}
+      else{ // P wave
+        if(cfg.p){push(x+6,0);push(x+12,8);push(x+18,0);}
+        const prlen=cfg.prlong?pr+20:(cfg.wenck?pr:pr);
+        x+= (cfg.p?18:0)+ (thisCyc - (cfg.p?18:0) - cfg.qrsW - 26);
+        push(x,0); // PR baseline end
+      }
+      // QRS (skip if Wenckebach drop or high-grade drop)
+      const drop=(cfg.wenck&&beat%4===3)||(cfg.drop&&beat%3===2);
+      if(!drop){
+        if(cfg.wide){push(x+3,-12);push(x+9,cfg.amp);push(x+15,-14);push(x+22,18);push(x+26,0);}
+        else{push(x+2,-9);push(x+5,cfg.amp);push(x+8,-11);push(x+cfg.qrsW,0);}
+        x+=cfg.qrsW+4;
+        if(cfg.st){push(x+3,12);push(x+10,12);push(x+16,18);push(x+24,4);x+=24;} // ST elevation + T
+        else if(cfg.t){push(x+8,0);push(x+16,11);push(x+24,0);x+=24;}
+        else x+=10;
+      } else {push(x+10,0);x+=14;}
+      x+=8;beat++;
+    }
+    push(W-6,0);
+  }
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  return `<div class="ecgbox"><span class="lead">${lead} · 25 mm/s</span>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${grid}<path class="ecgline draw" d="${d}"/></svg></div>`;
+}
+
+/* ---------- vital flag helpers ---------- */
+function vital(lab,val,unit,flag){return `<div class="vital ${flag||''}"><div class="lab">${lab}</div><div class="val">${val}${unit?`<span class="u"> ${unit}</span>`:''}</div></div>`;}
+function monitor(v){ // v: array of [lab,val,unit,flag]
+  return `<div class="monitor"><div class="vitrow">${v.map(x=>vital(x[0],x[1],x[2],x[3])).join('')}</div></div>`;}
+
+/* escape */
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+<script id="content">
+/* ====================  CONTEÚDO  ==================== */
+const TOPICS={arr:'Arritmias',sca:'SCA / IAM',sep:'Sepse / Choque',cad:'Cetoacidose',
+  gaso:'Ácido-base',intox:'Intoxicações',queim:'Queimaduras',abd:'Abdome agudo'};
+
+/* ---------- PLANTÃO: casos clínicos completos (modo principal) ---------- */
+/* ====================  PLANTÃO — casos refatorados (dados → interpretação → diagnóstico → conduta)  ====================
+   Cada caso: hist + data[] (liberados progressivamente, sempre visíveis em 📋 Dados) + blocks[] (action/choice/q/evo/resumo)
+   Teaching do preceptor embutido em cada bloco interativo (teach{}). Fluxograma mental em fluxo[].
+   Conteúdo 100% fiel ao livro USP/HC-FMUSP, 18ª ed. */
+const PLANTAO_A=[
+/* ---------------- TSV estável ---------------- */
+{id:'tsv1',topic:'arr',sev:'Estável',who:'Homem, 28 anos',chip:'Sala Vermelha',
+ hist:`Chega à emergência com <span class="hl">palpitações súbitas</span> há 40 minutos — sensação de coração disparado, sem dor torácica e sem síncope.`,
+ baseData:['vitais'],
+ data:[
+  {key:'vitais',kind:'vitals',vals:[['FC','190','bpm','crit'],['PA','118/72','mmHg'],['SatO₂','98','%'],['FR','18','irpm'],['T','36,4','°C']]},
+  {key:'exame',kind:'exam',cap:'Exame físico',text:`Consciente, orientado, bem perfundido, sem turgência jugular. Ausculta cardíaca sem sopros; pulmões limpos.`},
+  {key:'ecg',kind:'ecg',cap:'ECG — derivação DII longa',ecg:'tsv',lead:'DII',note:`QRS estreito, regular, ~188 bpm, sem onda P identificável.`}
+ ],
+ fluxo:[`Palpitação súbita`,`Solicitar ECG`,`QRS estreito + regular + sem P`,`TSV`,`Estável ou instável?`,`Estável → manobra vagal → adenosina 6 → 12 mg`],
+ blocks:[
+  {type:'action',etapa:'Etapa 1 · Primeira atitude',q:`Vitais na tela. O que você faz primeiro?`,reveal:['ecg'],
+   options:[
+    {label:`Solicitar ECG de 12 derivações`,best:true,reveal:['ecg']},
+    {label:`Examinar o paciente`,reveal:['exame']},
+    {label:`Ver o monitor cardíaco`},
+    {label:`Solicitar exames laboratoriais`}],
+   fb:{good:`Boa priorização. Numa taquiarritmia, o ECG é o exame que muda a conduta — peça primeiro. (O ECG já está em 📋 Dados disponíveis.)`,
+       part:`Razoável, mas numa taquiarritmia o exame que decide é o ECG. Examinar e monitorizar entram em paralelo, sem atrasar o traçado. (Liberei o ECG em 📋 Dados.)`},
+   teach:{reconhecer:`O ECG de 12 derivações é o que define ritmo, largura do QRS e presença de onda P — os três dados que classificam a arritmia.`,
+    pensar:[`Paciente estável dá tempo de pensar; mesmo assim, o ECG vem primeiro.`,`Sem ECG, qualquer hipótese de arritmia é chute.`],
+    decore:[`Taquiarritmia → ECG é o exame que muda a conduta`],
+    preceptor:`Na arritmia, o ECG vem antes do diagnóstico. Não se nomeia ritmo de memória.`}},
+  {type:'choice',etapa:'Etapa 2 · Largura do QRS',q:`Olhe o ECG em 📋 Dados. O QRS é estreito ou largo?`,
+   options:[{label:`Estreito (<120 ms / 3 quadradinhos)`,correct:true},{label:`Largo (≥120 ms)`}],
+   fb:{good:`Estreito. QRS estreito = condução pelo sistema His-Purkinje → origem supraventricular.`,
+       miss:`Compare a largura do QRS com 3 quadradinhos (120 ms). Aqui ele é fino → supraventricular. QRS largo apontaria origem ventricular.`},
+   teach:{reconhecer:`QRS estreito (<120 ms) significa que o estímulo desce pelo caminho normal — a origem está acima dos ventrículos.`,
+    pensar:[`Primeira pergunta de toda taquicardia: o QRS é estreito ou largo?`,`Estreito → supraventricular. Largo → trate como ventricular até prova em contrário.`],
+    decore:[`QRS estreito = supraventricular`,`QRS largo = pense ventricular`],
+    preceptor:`Largura do QRS é a primeira bifurcação. Estreito tranquiliza; largo liga o alerta.`,
+    erro:`Pular a largura do QRS e ir direto ao nome do ritmo.`}},
+  {type:'choice',etapa:'Etapa 3 · Regularidade',q:`O ritmo é regular ou irregular?`,
+   options:[{label:`Regular (R-R constante)`,correct:true},{label:`Irregularmente irregular`}],
+   fb:{good:`Regular. R-R constante + QRS estreito aponta uma taquicardia supraventricular organizada.`,
+       miss:`Meça três intervalos R-R: aqui são iguais (regular). Irregularmente irregular seria FA.`},
+   teach:{reconhecer:`R-R constante = ritmo regular. Na FA, os R-R são todos diferentes (irregularmente irregular).`,
+    pensar:[`Segunda pergunta: regular ou irregular?`,`Estreito + regular → TSV/flutter. Estreito + irregular → FA.`],
+    decore:[`Estreito + regular → TSV`,`Estreito + irregular → FA`],
+    preceptor:`Três R-R iguais = regular. É o que separa TSV de FA.`}},
+  {type:'choice',etapa:'Etapa 4 · Onda P',q:`Existe onda P identificável antes de cada QRS?`,
+   options:[{label:`Não há onda P visível`,correct:true},{label:`Sim, P antes de cada QRS`}],
+   fb:{good:`Sem P visível. QRS estreito + regular + sem P é o tripé clássico da TSV (reentrada nodal).`,
+       miss:`Procure a P logo antes do QRS: aqui ela não aparece (escondida no QRS/T). Estreito + regular + sem P = TSV.`},
+   teach:{reconhecer:`Na TSV por reentrada nodal, a P fica embutida no QRS e some do traçado.`,
+    pensar:[`Terceira pergunta: tem onda P?`,`Estreito + regular + sem P → TSV.`],
+    decore:[`TSV = QRS estreito + regular + sem P`],
+    preceptor:`A ausência de P fecha o tripé. Agora, e só agora, dá para nomear.`,
+    erro:`Confundir com taquicardia sinusal (essa tem P bem visível).`}},
+  {type:'q',etapa:'Etapa 5 · Hipótese',q:`Reunindo os achados (QRS estreito + regular + sem P): qual a principal hipótese?`,
+   accept:['taquicardia supraventricular','tsv','supraventricular','tpsv','reentrada nodal'],partial:['taquicardia','qrs estreito'],reject:['fibrilacao'],
+   fb:{good:`Isso — taquicardia supraventricular paroxística.`,part:`No caminho. O tripé (estreito + regular + sem P) define uma TSV.`,miss:`Estreito + regular + sem P = TSV. Não é FA (seria irregular) nem TV (seria larga).`},
+   teach:{reconhecer:`A hipótese nasce dos três achados que você acabou de extrair — não da história sozinha.`,
+    pensar:[`Estreito? Sim. Regular? Sim. Sem P? Sim → TSV.`],
+    pegadinha:`Confundir com FA de alta resposta — mas a FA é irregular.`,
+    decore:[`TSV = estreito + regular + sem P`],
+    simples:`O coração disparou numa batida rápida e certinha, como um motor acelerado em rotação constante. Não é a bagunça da fibrilação: é rápido, mas organizado.`,
+    preceptor:`O diagnóstico é a conclusão da leitura, não o ponto de partida.`,
+    erro:`Cravar FA só porque está taquicárdico.`}},
+  {type:'q',etapa:'Etapa 6 · Gravidade',q:`O paciente está estável ou instável?`,
+   accept:['estavel'],reject:['instavel'],
+   fb:{good:`Estável — sem hipotensão, sem rebaixamento, sem dor isquêmica, sem choque. Há tempo para droga.`,miss:`Cheque os 4 sinais de instabilidade: hipotensão, alteração do nível de consciência, dor isquêmica, choque/IC aguda. Ele não tem nenhum → estável.`},
+   teach:{reconhecer:`Estabilidade se julga por hipotensão, nível de consciência, dor isquêmica e sinais de choque — não pela FC.`,
+    pensar:[`A pergunta deixa de ser "qual arritmia" e passa a ser "o paciente aguenta?".`,`Sem repercussão → estável → tratamento químico.`],
+    pegadinha:`FC alta, por si só, não é instabilidade.`,
+    decore:[`Instabilidade = hipotensão, rebaixamento, dor isquêmica ou choque`],
+    preceptor:`Na emergência, primeiro trate a instabilidade. O nome da arritmia vem depois.`,
+    erro:`Tratar o número (FC 190) e esquecer de olhar o paciente.`}},
+  {type:'q',etapa:'Etapa 7 · Conduta',q:`Manobra vagal já realizada, sem resposta. Qual a conduta?`,
+   accept:['adenosina'],partial:['diltiazem','verapamil','betabloqueador','bloqueador de canal'],reject:['cardioversao','desfibril','amiodarona','atropina'],
+   fb:{good:`Adenosina 6 mg em bolus rápido + flush; sem reverter, 12 mg.`,part:`Pense no que freia o nó AV. Após a vagal falhar, a 1ª escolha é adenosina (6 → 12 mg); BCC/BB são alternativa.`,miss:`Estável não cardioverte de cara. Vagal falhou → adenosina 6 mg em bolus rápido (depois 12 mg). Cardioversão só se instabilizar.`},
+   teach:{reconhecer:`TSV estável que não respondeu à vagal → próximo passo é químico que bloqueia o nó AV.`,
+    pensar:[`Vagal primeiro.`,`Falhou → adenosina 6 mg em bolus rápido + flush; depois 12 mg.`,`Sem resposta → diltiazem/verapamil ou betabloqueador.`],
+    pegadinha:`Infundir adenosina devagar — a meia-vida é de segundos; sem bolus rápido + flush, ela não chega ao coração.`,
+    decore:[`TSV estável: vagal → adenosina 6 → 12 mg (bolus rápido + flush)`,`Instabilizou → cardioversão sincronizada`],
+    simples:`A adenosina dá um soluço de poucos segundos no coração para ele reiniciar no ritmo certo. Só funciona se entrar de uma vez e for empurrada com soro.`,
+    preceptor:`Adenosina é técnica: bolus rápido, flush e avise da sensação no peito.`,
+    erro:`Cardioverter um estável de cara, ou dar adenosina lenta.`}},
+  {type:'resumo',dx:`Taquicardia supraventricular paroxística (estável)`,
+   criterios:`QRS estreito (<120 ms) + regular + sem onda P; resposta à inibição do nó AV.`,
+   conduta:`Vagal → adenosina 6 mg bolus rápido + flush → 12 mg. BCC/BB como alternativa. Instabilizou → cardioversão sincronizada.`,
+   pega:`Estável não se cardioverte de imediato; e adenosina exige bolus rápido + flush, senão "não funciona".`}
+ ]},
+
+/* ---------------- FA instável (EAP) ---------------- */
+{id:'fa1',topic:'arr',sev:'Instável',who:'Mulher, 70 anos',chip:'Plantão',
+ hist:`Hipertensa, com insuficiência cardíaca. Trazida com <span class="hl">palpitação e dispneia súbita</span> há 1 hora, evoluindo com confusão.`,
+ baseData:['vitais'],
+ data:[
+  {key:'vitais',kind:'vitals',vals:[['FC','168','bpm','crit'],['PA','82/50','mmHg','crit'],['SatO₂','88','%','warn'],['FR','30','irpm','warn'],['T','36,2','°C']]},
+  {key:'exame',kind:'exam',cap:'Exame físico',text:`Sonolenta, sudoreica, mal perfundida. Estertores crepitantes bibasais — padrão de edema agudo de pulmão.`},
+  {key:'ecg',kind:'ecg',cap:'ECG — derivação DII longa',ecg:'fa',lead:'DII',note:`QRS estreito, irregularmente irregular, sem onda P, ~165 bpm.`}
+ ],
+ fluxo:[`Palpitação + dispneia + confusão`,`Solicitar ECG`,`QRS estreito + irregular + sem P`,`FA`,`Há instabilidade? (hipotensão/EAP)`,`Sim → cardioversão sincronizada 200 J`],
+ blocks:[
+  {type:'action',etapa:'Etapa 1 · Primeira atitude',q:`Paciente claramente grave. O que você faz primeiro?`,reveal:['ecg','exame'],
+   options:[
+    {label:`Avaliar ABC e monitorizar (ECG + oximetria + acesso)`,best:true,reveal:['ecg','exame']},
+    {label:`Pedir só o ECG`,reveal:['ecg']},
+    {label:`Iniciar antiarrítmico oral`},
+    {label:`Solicitar ecocardiograma`}],
+   fb:{good:`Certo — paciente instável: ABC, monitor, oximetria e acesso ao mesmo tempo, com ECG imediato. (ECG e exame em 📋 Dados.)`,
+       part:`O ECG é essencial, mas num instável a abordagem é simultânea: ABC + monitor + acesso. (Liberei ECG e exame.)`},
+   teach:{reconhecer:`No paciente instável, monitorização e ECG correm juntos com o ABC — não em fila.`,
+    pensar:[`Instável = agir em paralelo.`,`O ECG ainda guia o tipo de arritmia, mas a estabilização não espera.`],
+    decore:[`Instável → ABC + monitor + acesso simultâneos`],
+    preceptor:`Quanto mais grave, mais coisas acontecem ao mesmo tempo.`}},
+  {type:'choice',etapa:'Etapa 2 · Largura do QRS',q:`No ECG: o QRS é estreito ou largo?`,
+   options:[{label:`Estreito`,correct:true},{label:`Largo`}],
+   fb:{good:`Estreito → supraventricular.`,miss:`O QRS é fino aqui → supraventricular.`},
+   teach:{reconhecer:`QRS estreito → origem supraventricular.`,pensar:[`Largura primeiro: estreito → supraventricular.`],decore:[`QRS estreito = supraventricular`],preceptor:`Comece sempre pela largura do QRS.`}},
+  {type:'choice',etapa:'Etapa 3 · Regularidade',q:`O ritmo é regular ou irregular?`,
+   options:[{label:`Irregularmente irregular`,correct:true},{label:`Regular`}],
+   fb:{good:`Irregularmente irregular — a assinatura da FA.`,miss:`Meça os R-R: nenhum é igual ao outro → irregularmente irregular.`},
+   teach:{reconhecer:`R-R todos diferentes = irregularmente irregular, típico da FA.`,
+    pensar:[`Estreito + irregular → FA.`],pegadinha:`Flutter com condução variável também é irregular, mas tem dente de serra.`,
+    decore:[`FA = irregularmente irregular`],preceptor:`A irregularidade da irregularidade é a impressão digital da FA.`}},
+  {type:'choice',etapa:'Etapa 4 · Onda P',q:`Existe onda P organizada?`,
+   options:[{label:`Não — linha de base ondulante (ondas f)`,correct:true},{label:`Sim, P antes de cada QRS`}],
+   fb:{good:`Sem P organizada — os átrios fibrilam. Fecha FA.`,miss:`Não há P organizada; o que se vê é a ondulação fina da fibrilação atrial.`},
+   teach:{reconhecer:`Ausência de P + ondas f finas na linha de base = fibrilação atrial.`,
+    pensar:[`Estreito + irregular + sem P → FA.`],decore:[`FA = sem onda P, com ondas f`],preceptor:`Sem P e irregular: pare de procurar, é FA.`}},
+  {type:'q',etapa:'Etapa 5 · Hipótese',q:`Qual a principal hipótese?`,
+   accept:['fibrilacao atrial','fa'],partial:['fibrilacao','arritmia','taquicardia irregular'],reject:['ventricular','fv'],
+   fb:{good:`Fibrilação atrial com resposta ventricular rápida.`,part:`Os achados (irregular + sem P) definem FA.`,miss:`Irregularmente irregular + ausência de P = fibrilação atrial.`},
+   teach:{reconhecer:`A hipótese vem dos três achados, não do "ela é cardiopata".`,pensar:[`Estreito + irregular + sem P → FA.`],
+    decore:[`FA = estreito + irregular + sem P`],preceptor:`Leia o traçado, depois nomeie.`}},
+  {type:'q',etapa:'Etapa 6 · Gravidade',q:`Estável ou instável? Cite o achado que decide.`,
+   accept:['instavel','edema agudo','hipotensao','hipoperfusao','choque','rebaixamento'],reject:['estavel'],
+   fb:{good:`Instável — hipotensão + EAP + rebaixamento. É a tríade que muda toda a conduta.`,miss:`Hipotensão (82/50) + edema agudo de pulmão + confusão = instabilidade hemodinâmica.`},
+   teach:{reconhecer:`Hipotensão, EAP e rebaixamento são sinais de que a arritmia está derrubando a paciente.`,
+    pensar:[`Tem instabilidade? Sim → a arritmia precisa ser revertida AGORA.`],
+    pegadinha:`Atribuir a hipotensão a outra causa e perder tempo com controle de frequência.`,
+    decore:[`FA instável = hipotensão/EAP/isquemia/hipoperfusão`],
+    simples:`Ela está se afogando por dentro (pulmão cheio) e com a pressão no chão. Não é hora de remédio devagar.`,
+    preceptor:`Quando a arritmia derruba o paciente, o eletrodo resolve mais rápido que a ampola.`,
+    erro:`Esquecer de avaliar a estabilidade.`}},
+  {type:'q',etapa:'Etapa 7 · Conduta',q:`Qual a conduta imediata?`,
+   accept:['cardioversao','cardioverter','choque sincronizado'],partial:['sincronizada','200 j','eletrica'],reject:['adenosina','controle de frequencia','diltiazem','metoprolol'],
+   fb:{good:`Cardioversão elétrica sincronizada imediata — no livro, 200 J bifásico.`,part:`É cardioversão; especifique: sincronizada, 200 J no bifásico.`,miss:`FA instável → cardioversão sincronizada de imediato. Não perca tempo com controle de frequência.`},
+   teach:{reconhecer:`FA + instabilidade → cardioversão elétrica SINCRONIZADA.`,
+    pensar:[`Instável → elétrico.`,`Tem QRS organizado → SINCRONIZAR o choque com o QRS.`,`Sedar antes, se possível.`],
+    pegadinha:`Choque NÃO sincronizado num QRS pode cair na onda T e induzir FV.`,
+    decore:[`FA instável → cardioversão sincronizada 200 J (bifásico)`],
+    simples:`O choque tem que ser dado no momento certo da batida; na hora errada, vira uma arritmia fatal.`,
+    preceptor:`Aperte SYNC antes de carregar — é o que separa cardioversão de desfibrilação.`,
+    erro:`Esquecer de sincronizar, ou insistir em droga num paciente que descompensa.`}},
+  {type:'resumo',dx:`Fibrilação atrial com instabilidade hemodinâmica (EAP)`,
+   criterios:`Irregularmente irregular + ausência de P. Instabilidade: hipotensão, EAP, isquemia ou hipoperfusão.`,
+   conduta:`Instável → cardioversão sincronizada imediata (200 J bifásico). Estável → controle de frequência (BB/BCC; amiodarona/digoxina se disfunção grave).`,
+   pega:`Cardioversão de FA é SINCRONIZADA; choque não sincronizado pode induzir FV.`}
+ ]},
+
+/* ---------------- TV monomórfica com pulso, instável ---------------- */
+{id:'tv1',topic:'arr',sev:'Instável',who:'Homem, 64 anos',chip:'Sala Vermelha',
+ hist:`IAM prévio há 3 anos. Início súbito de <span class="hl">palpitação e pré-síncope</span>; chega pálido, sudoreico, com dor torácica.`,
+ baseData:['vitais'],
+ data:[
+  {key:'vitais',kind:'vitals',vals:[['FC','176','bpm','crit'],['PA','78/44','mmHg','crit'],['SatO₂','90','%','warn'],['FR','26','irpm'],['Glasgow','13','','warn']]},
+  {key:'exame',kind:'exam',cap:'Exame físico',text:`Pálido, sudoreico, mal perfundido, pulso fino e rápido. Refere dor torácica.`},
+  {key:'ecg',kind:'ecg',cap:'ECG — derivação DII longa',ecg:'tv',lead:'DII',note:`QRS largo (>120 ms), regular, monomórfico, ~176 bpm.`}
+ ],
+ fluxo:[`Palpitação + pré-síncope, IAM prévio`,`Solicitar ECG`,`QRS largo + regular + monomórfico`,`Trate como TV`,`Tem pulso? Instável?`,`Com pulso + instável → cardioversão sincronizada`],
+ blocks:[
+  {type:'action',etapa:'Etapa 1 · Primeira atitude',q:`O que você faz primeiro?`,reveal:['ecg','exame'],
+   options:[
+    {label:`Monitorizar, checar pulso e fazer ECG`,best:true,reveal:['ecg','exame']},
+    {label:`Pedir só o ECG`,reveal:['ecg']},
+    {label:`Dar adenosina empiricamente`},
+    {label:`Solicitar troponina e aguardar`}],
+   fb:{good:`Certo — monitor, checar pulso (define cardioversão x desfibrilação) e ECG imediato. (ECG e exame em 📋 Dados.)`,
+       part:`O ECG é essencial; mas, antes de tratar, cheque o PULSO — é ele que define o tipo de choque. (Liberei ECG e exame.)`},
+   teach:{reconhecer:`Em taquicardia de QRS largo, checar o pulso decide entre cardioversão (com pulso) e desfibrilação (sem pulso).`,
+    pensar:[`Monitor + pulso + ECG.`,`Adenosina empírica numa possível TV é arriscado.`],
+    decore:[`Taqui QRS largo: cheque o pulso antes de escolher o choque`],
+    preceptor:`Em QRS largo, a primeira coisa que salva é checar o pulso.`}},
+  {type:'choice',etapa:'Etapa 2 · Largura do QRS',q:`O QRS é estreito ou largo?`,
+   options:[{label:`Largo (≥120 ms)`,correct:true},{label:`Estreito`}],
+   fb:{good:`Largo → origem ventricular provável.`,miss:`O QRS é alargado (≥120 ms) → trate como ventricular.`},
+   teach:{reconhecer:`QRS largo = estímulo que não desce pelo caminho normal → origem ventricular provável.`,
+    pensar:[`Largo + cardiopatia prévia → assuma TV.`],pegadinha:`QRS >200 ms muito bizarro → pense causa tóxico-metabólica (ex.: hipercalemia).`,
+    decore:[`QRS largo + cardiopatia → trate como TV`],preceptor:`QRS largo até prova em contrário é TV. Errar para TV protege.`}},
+  {type:'choice',etapa:'Etapa 3 · Regularidade',q:`O ritmo é regular ou irregular?`,
+   options:[{label:`Regular e monomórfico`,correct:true},{label:`Polimórfico/irregular`}],
+   fb:{good:`Regular e monomórfico — TV monomórfica.`,miss:`Os QRS têm a mesma forma e cadência regular → TV monomórfica (polimórfica seria torsades).`},
+   teach:{reconhecer:`QRS de mesma morfologia e R-R regular = TV monomórfica.`,pensar:[`Monomórfica → cardioversão/amiodarona conforme estabilidade.`,`Polimórfica (torsades) → sulfato de magnésio.`],
+    decore:[`Monomórfica regular x polimórfica (torsades)`],preceptor:`A morfologia do QRS muda o tratamento da TV.`}},
+  {type:'choice',etapa:'Etapa 4 · Onda P / dissociação',q:`Há relação entre P e QRS?`,
+   options:[{label:`P não acompanha o QRS (dissociação AV)`,correct:true},{label:`P conduz cada QRS normalmente`}],
+   fb:{good:`Dissociação AV favorece fortemente TV.`,miss:`Quando há P dissociada (batendo independente do QRS largo), isso reforça TV.`},
+   teach:{reconhecer:`Dissociação AV, capturas e fusões são pistas de TV — mas no instável não se perde tempo procurando.`,
+    pensar:[`Achou dissociação? Reforça TV.`,`Não achou? Largo + cardiopatia já basta para tratar como TV.`],
+    decore:[`Dissociação AV → forte indício de TV`],preceptor:`Pistas de TV ajudam, mas o instável não espera a análise fina.`}},
+  {type:'q',etapa:'Etapa 5 · Hipótese',q:`Qual a principal hipótese?`,
+   accept:['taquicardia ventricular','tv'],partial:['qrs largo','ventricular'],reject:['supra','fibrilacao'],
+   fb:{good:`Taquicardia ventricular monomórfica.`,part:`QRS largo + cardiopatia → trate como TV.`,miss:`Taqui de QRS largo com cardiopatia prévia = trate como TV até prova em contrário.`},
+   teach:{reconhecer:`A hipótese sai da largura + regularidade + contexto (cardiopatia).`,pensar:[`Largo + regular + cardiopatia → TV.`],
+    decore:[`TV = QRS largo + regular + cardiopatia`],
+    simples:`O coração está disparando lá de baixo (ventrículo); por isso a batida é larga. Em quem já infartou, presuma o pior.`,
+    preceptor:`Diante de QRS largo, a aposta segura é TV.`,erro:`Dar adenosina numa TV achando que é TSV aberrante.`}},
+  {type:'q',etapa:'Etapa 6 · Gravidade / pulso',q:`Tem pulso, mas está instável (hipotensão, dor, pré-síncope). Estável ou instável?`,
+   accept:['instavel'],reject:['estavel'],
+   fb:{good:`Instável com pulso — isso define cardioversão sincronizada.`,miss:`Hipotensão + dor + pré-síncope = instável. E como tem pulso, será cardioversão (não desfibrilação).`},
+   teach:{reconhecer:`Instabilidade com pulso presente → cardioversão sincronizada.`,pensar:[`Tem pulso? Sim.`,`Instável? Sim → cardioversão sincronizada.`,`Perdeu o pulso → desfibrilação + RCP.`],
+    decore:[`Com pulso + instável → cardioversão sincronizada`,`Sem pulso → desfibrilação + RCP`],
+    preceptor:`O pulso decide o tipo de choque; a instabilidade decide a pressa.`,erro:`Desfibrilar quem ainda tem pulso.`}},
+  {type:'q',etapa:'Etapa 7 · Conduta',q:`Qual a conduta?`,
+   accept:['cardioversao','cardioverter','choque sincronizado'],partial:['sincronizada','eletrica'],reject:['adenosina','desfibrilacao'],
+   fb:{good:`Cardioversão elétrica sincronizada imediata, sob sedação.`,part:`É cardioversão; especifique sincronizada (há pulso).`,miss:`TV com pulso + instável = cardioversão SINCRONIZADA. Desfibrilação é para TV/FV SEM pulso.`},
+   teach:{reconhecer:`TV com pulso + instável → cardioversão sincronizada.`,pensar:[`Com pulso + instável → sincronizada.`,`Estável → considerar amiodarona.`,`Sem pulso → desfibrilação + RCP.`],
+    pegadinha:`Confundir cardioversão (com pulso) e desfibrilação (sem pulso).`,
+    decore:[`TV com pulso instável → cardioversão sincronizada`,`TV/FV sem pulso → desfibrilação`,`TV com pulso estável → amiodarona`],
+    simples:`Se ainda tem pulso, o choque é no compasso (sincronizado). Se parou de bombear, é o choque forte da parada.`,
+    preceptor:`Pulso presente = sincronize. Sempre cheque antes de escolher o choque.`,erro:`Desfibrilar (sem sincronizar) quem tem pulso.`}},
+  {type:'resumo',dx:`Taquicardia ventricular monomórfica com pulso, instável`,
+   criterios:`QRS largo regular + cardiopatia prévia; dissociação AV reforça. QRS >200 ms bizarro → pense tóxico-metabólico.`,
+   conduta:`Com pulso + instável → cardioversão sincronizada. Com pulso + estável → amiodarona. Sem pulso → desfibrilação + RCP.`,
+   pega:`Sincronizada (com pulso) ≠ desfibrilação (sem pulso). Não dê adenosina numa TV.`}
+ ]},
+
+/* ---------------- Bradicardia / BAV total ---------------- */
+{id:'brady1',topic:'arr',sev:'Instável',who:'Homem, 82 anos',chip:'Plantão',
+ hist:`Mal-estar, tontura e <span class="hl">lipotimia ao levantar</span>. Chega rebaixado e hipotenso.`,
+ baseData:['vitais'],
+ data:[
+  {key:'vitais',kind:'vitals',vals:[['FC','34','bpm','crit'],['PA','82/50','mmHg','crit'],['SatO₂','93','%'],['FR','16','irpm'],['Glasgow','13','','warn']]},
+  {key:'exame',kind:'exam',cap:'Exame físico',text:`Sonolento, mal perfundido, sem dor torácica. Pulso lento e regular.`},
+  {key:'ecg',kind:'ecg',cap:'ECG — derivação DII longa',ecg:'bav3',lead:'DII',note:`Ondas P regulares e QRS lentos independentes — dissociação AV completa.`}
+ ],
+ fluxo:[`Bradicardia + lipotimia + rebaixamento`,`Solicitar ECG`,`P e QRS independentes (dissociação AV)`,`BAV total`,`Instável?`,`Atropina 1 mg → marca-passo`],
+ blocks:[
+  {type:'action',etapa:'Etapa 1 · Primeira atitude',q:`Bradicárdico e rebaixado. O que você faz primeiro?`,reveal:['ecg','exame'],
+   options:[
+    {label:`Monitorizar, acesso e ECG, com pás de marca-passo à mão`,best:true,reveal:['ecg','exame']},
+    {label:`Pedir só o ECG`,reveal:['ecg']},
+    {label:`Liberar para casa após melhora`},
+    {label:`Solicitar TC de crânio antes de tudo`}],
+   fb:{good:`Certo — instável: monitor, acesso, ECG e já deixar o marca-passo transcutâneo preparado. (ECG e exame em 📋 Dados.)`,
+       part:`O ECG é essencial; num bradicárdico instável, prepare o marca-passo em paralelo. (Liberei ECG e exame.)`},
+   teach:{reconhecer:`Bradicardia instável exige preparar o marca-passo enquanto investiga.`,pensar:[`Instável → monitor + acesso + ECG + marca-passo à mão.`],
+    decore:[`Bradi instável → marca-passo preparado desde o início`],preceptor:`No bradicárdico grave, prepare o marca-passo antes de precisar dele.`}},
+  {type:'choice',etapa:'Etapa 2 · Largura do QRS',q:`O QRS é estreito ou largo?`,
+   options:[{label:`Estreito (escape juncional)`,correct:true},{label:`Largo (escape ventricular)`}],
+   fb:{good:`Estreito aqui — escape mais alto. A largura do escape sugere o nível do bloqueio.`,miss:`Neste traçado o QRS de escape é estreito; a largura do escape ajuda a localizar o bloqueio.`},
+   teach:{reconhecer:`A largura do QRS de escape sugere o nível: estreito (mais alto/juncional) x largo (mais baixo/ventricular).`,
+    pensar:[`Mesmo na bradicardia, comece pela largura do QRS.`],decore:[`Escape estreito = mais alto; largo = mais baixo`],preceptor:`A largura do escape conta de onde o coração está "se virando".`}},
+  {type:'choice',etapa:'Etapa 3 · Regularidade',q:`Os QRS são regulares?`,
+   options:[{label:`Sim, QRS regulares e lentos`,correct:true},{label:`Não, irregulares`}],
+   fb:{good:`QRS regulares e lentos — ritmo de escape.`,miss:`Os QRS marcham regulares e lentos (escape).`},
+   teach:{reconhecer:`Escape costuma ser regular; a frequência é que está baixa.`,pensar:[`Regular + lento → bradiarritmia organizada.`],decore:[`Escape = regular e lento`],preceptor:`Bradicardia regular pede que você olhe a relação P-QRS.`}},
+  {type:'choice',etapa:'Etapa 4 · Onda P',q:`Como está a relação entre P e QRS?`,
+   options:[{label:`P e QRS independentes (dissociação AV)`,correct:true},{label:`Cada P conduz um QRS`}],
+   fb:{good:`Dissociação AV — P e QRS marcham em frequências próprias. Define BAV total.`,miss:`Marque as P e os QRS: eles batem independentes (dissociação AV) → BAV total.`},
+   teach:{reconhecer:`No BAV total, nenhuma P conduz; P e QRS são independentes (dissociação AV completa).`,
+    pensar:[`As P têm relação fixa com os QRS? Não → dissociação AV.`,`Dissociação completa + escape lento → BAV de 3º grau.`],
+    pegadinha:`No total, o PR sequer é mensurável (P e QRS independentes).`,
+    decore:[`BAV total = P e QRS independentes`,`Mobitz I = PR aumenta até cair; Mobitz II = PR fixo e cai súbito`],
+    preceptor:`Marque P e QRS separados; sem sincronia = bloqueio total.`}},
+  {type:'q',etapa:'Etapa 5 · Hipótese',q:`Qual o diagnóstico?`,
+   accept:['bav total','bav 3','bloqueio atrioventricular total','bav de terceiro grau','bavt'],partial:['bav','bloqueio av','bradiarritmia'],
+   fb:{good:`BAV de 3º grau (total): P e QRS independentes.`,part:`A dissociação completa define o BAV de 3º grau (total).`,miss:`P e QRS em frequências independentes = BAV total (3º grau).`},
+   teach:{reconhecer:`O diagnóstico vem da dissociação AV que você identificou.`,pensar:[`Dissociação AV completa → BAV total.`],
+    decore:[`BAV total = dissociação AV completa`],
+    simples:`O fio entre o andar de cima (átrio) e o de baixo (ventrículo) se rompeu; cada um bate no seu ritmo.`,
+    preceptor:`Sem sincronia entre P e QRS, é bloqueio total.`,erro:`Chamar de bradicardia sinusal e só observar.`}},
+  {type:'q',etapa:'Etapa 6 · Gravidade',q:`Estável ou instável?`,
+   accept:['instavel'],reject:['estavel'],
+   fb:{good:`Instável — hipotensão + rebaixamento.`,miss:`Hipotensão (82/50) + rebaixamento (Glasgow 13) = instável.`},
+   teach:{reconhecer:`Instabilidade na bradicardia: hipotensão, rebaixamento, síncope, dor, dispneia.`,pensar:[`Instável → tratar já.`],
+    decore:[`Bradi instável → atropina → marca-passo`],preceptor:`Trate a instabilidade; o nome do bloqueio só refina a conduta.`}},
+  {type:'q',etapa:'Etapa 7 · Conduta',q:`Qual a primeira droga e a dose? E se não responder?`,
+   accept:['atropina'],partial:['1 mg','marcapasso','marca-passo','transcutaneo'],reject:['adenosina','adrenalina em bolus'],
+   fb:{good:`Atropina 1 mg IV; refratário → marca-passo transcutâneo (ou dopamina/adrenalina).`,part:`É atropina 1 mg IV (não 0,5); se falhar, marca-passo.`,miss:`Bradi instável: atropina 1 mg IV (pegadinha da dose). BAV avançado responde mal → marca-passo.`},
+   teach:{reconhecer:`Bradi instável → atropina 1 mg; BAV avançado/infranodal responde mal → marca-passo.`,
+    pensar:[`Atropina 1 mg IV.`,`Bloqueio infranodal (Mobitz II/total)? A atropina costuma falhar → marca-passo transcutâneo sem demora.`,`Definitivo: marca-passo transvenoso.`],
+    pegadinha:`A dose é 1 mg (não 0,5 mg) na bradicardia instável.`,
+    decore:[`Bradi instável: atropina 1 mg IV`,`BAV avançado/total → marca-passo (atropina costuma falhar)`],
+    simples:`Primeiro um empurrãozinho químico (atropina); se o bloqueio é lá embaixo, o empurrão não pega — aí entra o marca-passo.`,
+    preceptor:`Em bloqueio infranodal, não namore a atropina: prepare o marca-passo.`,erro:`Usar atropina 0,5 mg ou atrasar o marca-passo.`}},
+  {type:'resumo',dx:`BAV de 3º grau (total) com instabilidade`,
+   criterios:`Dissociação AV: P e QRS independentes. Instabilidade: hipotensão, rebaixamento, síncope, dor, dispneia.`,
+   conduta:`Atropina 1 mg IV. Refratário → marca-passo transcutâneo e/ou dopamina/adrenalina, com MP transvenoso definitivo.`,
+   pega:`Atropina costuma falhar no BAV avançado (infranodal) — não atrase o marca-passo esperando a droga. Dose é 1 mg.`}
+ ]},
+
+/* ---------------- IAM com supra (inferior) ---------------- */
+{id:'stemi1',topic:'sca',sev:'Grave',who:'Homem, 58 anos',chip:'Sala Vermelha',
+ hist:`Tabagista, diabético. <span class="hl">Dor torácica opressiva</span> há 50 minutos, irradiando para o braço esquerdo, com sudorese e náusea.`,
+ baseData:['vitais'],
+ data:[
+  {key:'vitais',kind:'vitals',vals:[['FC','58','bpm'],['PA','110/70','mmHg'],['SatO₂','96','%'],['FR','20','irpm'],['T','36,5','°C']]},
+  {key:'exame',kind:'exam',cap:'Exame físico',text:`Sudoreico, ansioso, bulhas normofonéticas, sem estertores. Sem sopros novos.`},
+  {key:'ecg',kind:'ecg',cap:'ECG — 12 derivações',ecg:'stemi',lead:'DII',note:`Supradesnivelamento de ST em DII, DIII e aVF; infradesnivelamento (espelho) em aVL.`}
+ ],
+ fluxo:[`Dor torácica`,`ECG em ≤10 min`,`Existe supra?`,`Sim → IAMCST`,`Qual parede? (DII/DIII/aVF = inferior)`,`Qual artéria? (coronária direita)`,`Reperfusão (angioplastia primária)`],
+ blocks:[
+  {type:'action',etapa:'Etapa 1 · Primeira atitude',q:`Dor torácica típica. Qual a primeira atitude?`,reveal:['ecg'],
+   options:[
+    {label:`ECG de 12 derivações em até 10 minutos`,best:true,reveal:['ecg']},
+    {label:`Examinar e auscultar`,reveal:['exame']},
+    {label:`Aguardar a 1ª troponina`},
+    {label:`Solicitar radiografia de tórax`}],
+   fb:{good:`Certo — na dor torácica, o ECG deve ser feito em ≤10 min da chegada. (ECG em 📋 Dados.)`,
+       part:`Tudo isso entra, mas a prioridade absoluta é o ECG em ≤10 min — é ele que define reperfusão. (Liberei o ECG.)`},
+   teach:{reconhecer:`O ECG precoce (≤10 min) é o exame que define o IAM com supra e dispara a reperfusão.`,
+    pensar:[`Dor torácica → ECG em 10 min, antes de qualquer enzima.`],
+    pegadinha:`Esperar a troponina para "confirmar" — o IAMCST é diagnóstico eletrocardiográfico.`,
+    decore:[`Dor torácica → ECG ≤10 min`,`IAMCST não depende de enzima`],preceptor:`No supra, o relógio começa no ECG, não no laboratório.`}},
+  {type:'choice',etapa:'Etapa 2 · Existe supra de ST?',q:`Olhe o ECG. Há supradesnivelamento de ST?`,
+   options:[{label:`Sim, há supra de ST`,correct:true},{label:`Não, ST normal`}],
+   fb:{good:`Sim — supra de ST presente. Isso já é IAMCST e indica reperfusão.`,miss:`Há elevação do ponto J/ST nas derivações inferiores → supra presente → IAMCST.`},
+   teach:{reconhecer:`Supra de ST em 2 derivações contíguas define IAMCST (em V2–V3 o critério de milimetragem é maior).`,
+    pensar:[`Tem supra? Sim → IAMCST → reperfusão.`,`Procure também o espelho (infra recíproco), que confirma.`],
+    decore:[`Supra em 2 contíguas = IAMCST`,`Posterior (V7–V9): basta 0,5 mm`],preceptor:`Achou supra? Pare de investigar e parta para reperfundir.`}},
+  {type:'q',etapa:'Etapa 3 · Derivações alteradas',q:`Quais derivações estão com supra?`,
+   accept:['dii diii avf','d2 d3 avf','inferiores','dii','diii','avf'],partial:['inferior'],
+   fb:{good:`DII, DIII e aVF — as derivações inferiores.`,part:`São as inferiores: DII, DIII e aVF.`,miss:`O supra está em DII, DIII e aVF (grupo inferior), com espelho em aVL.`},
+   teach:{reconhecer:`Agrupe as derivações: DII/DIII/aVF (inferior), V1–V4 (anterossseptal), DI/aVL/V5–V6 (lateral).`,
+    pensar:[`Quais derivações? DII, DIII, aVF.`,`Esse grupo enxerga a parede inferior.`],
+    decore:[`Inferior: DII, DIII, aVF`,`Anterosseptal: V1–V4`,`Lateral: DI, aVL, V5–V6`],preceptor:`Localizar as derivações é o passo que metade da turma pula.`}},
+  {type:'q',etapa:'Etapa 4 · Parede',q:`Qual parede foi acometida?`,
+   accept:['inferior','parede inferior'],partial:['inferolateral'],reject:['anterior','lateral isolada'],
+   fb:{good:`Parede inferior (DII/DIII/aVF).`,part:`É inferior; pode haver extensão.`,miss:`DII/DIII/aVF = parede inferior.`},
+   teach:{reconhecer:`As derivações inferiores enxergam a parede inferior do VE.`,pensar:[`DII/DIII/aVF → parede inferior.`],
+    pegadinha:`Confundir inferior com lateral — o aVF ancora a inferior.`,
+    decore:[`DII/DIII/aVF → parede inferior`],
+    simples:`Cada par de "olhos" do ECG olha um lado do coração; DII, DIII e aVF olham por baixo.`,
+    preceptor:`Decore os grupos por parede — é o que transforma supra em diagnóstico topográfico.`,erro:`Ver supra e não localizar a parede.`}},
+  {type:'q',etapa:'Etapa 5 · Artéria',q:`Qual artéria provavelmente está envolvida?`,
+   accept:['coronaria direita','cd','direita'],partial:['circunflexa'],reject:['descendente anterior','da'],
+   fb:{good:`Coronária direita — irriga a parede inferior (e às vezes a posterior).`,part:`Em geral é a coronária direita; a circunflexa é mais lateral/posterior.`,miss:`Parede inferior → coronária direita. A DA é anterior/septal; a circunflexa, lateral.`},
+   teach:{reconhecer:`Inferior → coronária direita; anterior/septal → DA; lateral → circunflexa.`,
+    pensar:[`Parede inferior → coronária direita.`,`Por isso bradicardia/BAV e hipotensão são comuns (o nó AV costuma ser irrigado pela CD).`],
+    pegadinha:`Cuidado com nitrato no IAM inferior (acometimento de VD pode derrubar a pressão).`,
+    decore:[`Inferior → CD`,`Anterior/septal → DA`,`Lateral → circunflexa`],
+    preceptor:`A artéria culpada já avisa as armadilhas — no inferior, cautela com nitrato e olho no VD.`,erro:`Liberar nitrato à vontade no IAM inferior com VD.`}},
+  {type:'q',etapa:'Etapa 6 · Conduta',q:`Qual a melhor estratégia de reperfusão?`,
+   accept:['angioplastia','atc','intervencao coronaria percutanea','icp','cateterismo','reperfusao percutanea'],partial:['trombolise','fibrinolitico','reperfusao'],reject:['esperar troponina'],
+   fb:{good:`Angioplastia primária — superior ao fibrinolítico. + AAS + 2º antiagregante (ticagrelor) + analgesia/O₂ se necessário.`,part:`Reperfusão sim; angioplastia primária é superior à trombólise (alvo iniciar fibrinolítico em 30 min se ATC indisponível).`,miss:`IAMCST = reperfusão. Angioplastia primária > fibrinólise; diagnóstico é do ECG e não espera enzima.`},
+   teach:{reconhecer:`IAMCST → reperfusão; angioplastia primária é superior ao fibrinolítico.`,
+    pensar:[`Tem supra → reperfundir.`,`Angioplastia primária preferida; fibrinolítico (iniciar em 30 min) se ATC indisponível.`,`AAS sempre; ticagrelor 180 mg de ataque.`],
+    pegadinha:`Esperar troponina para reperfundir.`,
+    decore:[`Angioplastia primária > fibrinólise`,`AAS sempre (salvo alergia/dissecção)`,`Ticagrelor 180 mg ataque`],
+    simples:`A artéria está entupida e o músculo morrendo. Abra rápido (de preferência por cateterismo). Não espere exame de sangue.`,
+    preceptor:`Tempo é músculo.`,erro:`Esperar enzima para reperfundir o supra.`}},
+  {type:'resumo',dx:`IAM com supradesnivelamento de ST — parede inferior (coronária direita)`,
+   criterios:`Supra em 2 contíguas (V2–V3 maior; posterior V7–V9 ≥0,5 mm). Espelho confirma. Diagnóstico em ≤10 min, sem depender de enzima.`,
+   conduta:`Angioplastia primária (superior à trombólise) + AAS + ticagrelor + analgesia + O₂ se SatO₂<90 + estatina. Reperfundido com fibrinolítico → estratificação invasiva em ≤24 h.`,
+   pega:`IAM inferior cursa com bradicardia/hipotensão — cuidado com nitrato e com acometimento de VD. Não espere troponina para reperfundir.`}
+ ]}
+];
+const PLANTAO_B=[
+/* ---------------- Sepse / choque séptico ---------------- */
+{id:'sepse1',topic:'sep',sev:'Choque séptico',who:'Homem, 78 anos',chip:'Sala Vermelha',
+ hist:`Vem de ILPI com <span class="hl">tosse produtiva, febre e confusão</span> há 2 dias. Hoje rebaixou e ficou hipotenso.`,
+ baseData:['vitais','exame'],
+ data:[
+  {key:'vitais',kind:'vitals',vals:[['FC','124','bpm','warn'],['PA','78/40','mmHg','crit'],['SatO₂','89','%','warn'],['FR','30','irpm','crit'],['T','38,9','°C','warn']]},
+  {key:'exame',kind:'exam',cap:'Exame físico',text:`Sonolento (Glasgow 13), taquipneico, crepitações em base direita. Extremidades frias, TEC lentificado.`},
+  {key:'labs',kind:'labs',cap:'Laboratório (após coleta)',items:[['Lactato','5,2 mmol/L','hi'],['pH','7,28','lo'],['Leucócitos','19.500','hi'],['Creatinina','2,1','hi'],['PaO₂/FiO₂','210','lo']]}
+ ],
+ fluxo:[`Infecção (pulmão) + disfunção orgânica`,`Sepse (qSOFA ≥2 rastreia)`,`Hipotensão após volume + lactato >2?`,`Sim → choque séptico`,`Volume 30 mL/kg + ATB 1ª hora + noradrenalina`],
+ blocks:[
+  {type:'q',etapa:'Etapa 1 · Existe infecção?',q:`Há foco infeccioso? Qual?`,
+   accept:['sim','pulmonar','pneumonia','respiratorio','pulmao'],partial:['infeccao'],
+   fb:{good:`Sim — foco pulmonar (tosse, febre, crepitações em base). O pulmão é o foco mais comum de sepse.`,part:`Há infecção; o foco aqui é pulmonar (pneumonia).`,miss:`Tosse + febre + crepitações = foco pulmonar. Pneumonia é a causa mais comum de sepse.`},
+   teach:{reconhecer:`Febre, tosse produtiva e crepitações localizam o foco pulmonar.`,pensar:[`Primeiro confirme a infecção e o foco.`,`Pulmão é o foco nº 1 de sepse.`],
+    decore:[`Foco mais comum de sepse = pulmão`],preceptor:`Toda sepse tem um foco — procure-o desde o início.`}},
+  {type:'q',etapa:'Etapa 2 · Disfunção orgânica?',q:`Há disfunção orgânica? Cite sinais.`,
+   accept:['sim','hipotensao','confusao','rebaixamento','taquipneia','lactato','renal'],partial:['disfuncao'],
+   fb:{good:`Sim — hipotensão, rebaixamento, taquipneia e (nos exames) lesão renal e lactato alto. Infecção + disfunção = sepse.`,miss:`Hipotensão + confusão + taquipneia já sinalizam disfunção orgânica. Infecção + disfunção = sepse.`},
+   teach:{reconhecer:`Disfunção orgânica: hipotensão, rebaixamento, taquipneia, oligúria, lesão renal, lactato alto.`,
+    pensar:[`Infecção + disfunção orgânica (↑≥2 SOFA) = sepse.`,`qSOFA (FR≥22, PAS≤100, mental) rastreia à beira do leito.`],
+    pegadinha:`Parar em "pneumonia" e não nomear a sepse — é o nome que dispara o relógio do antibiótico.`,
+    decore:[`Sepse = infecção + disfunção orgânica`,`qSOFA = FR≥22 + PAS≤100 + mental alterado`],
+    simples:`Não é só uma infecção no pulmão: a resposta do corpo descontrolou e começou a desligar outros órgãos.`,
+    preceptor:`Nomeie a sepse explicitamente — o nome liga o relógio do antibiótico.`,erro:`Subestimar como pneumonia de enfermaria.`}},
+  {type:'q',etapa:'Etapa 3 · Sepse ou choque séptico?',q:`Ele está em sepse ou em choque séptico?`,
+   accept:['choque septico','choque','septico'],reject:['so sepse','apenas sepse'],
+   fb:{good:`Choque séptico — hipotensão que exigirá vasopressor para PAM ≥65 + lactato >2.`,miss:`Hipotensão persistente, necessidade de vasopressor para PAM ≥65 e lactato >2 = choque séptico (forma mais grave).`},
+   teach:{reconhecer:`Choque séptico = vasopressor para PAM ≥65 + lactato >2 apesar do volume.`,
+    pensar:[`Hipotenso após volume? Vai precisar de vasopressor + lactato alto? → choque séptico.`],
+    pegadinha:`Chamar de choque séptico qualquer hipotensão — precisa de vasopressor + lactato >2.`,
+    decore:[`Choque séptico = vasopressor p/ PAM≥65 + lactato >2`],
+    simples:`Mesmo depois de soro, a pressão não sobe e o lactato (sofrimento dos tecidos) está alto. É o degrau mais grave.`,
+    preceptor:`Choque séptico tem definição precisa — não use o termo de forma frouxa.`,erro:`Rotular cedo ou tarde demais.`}},
+  {type:'q',etapa:'Etapa 4 · Exames',q:`Quais exames você pede de imediato?`,reveal:['labs'],
+   accept:['lactato','hemocultura','culturas','gasometria','hemograma'],partial:['exames','funcao renal','rx torax'],
+   fb:{good:`Lactato, culturas (antes do ATB, sem atrasá-lo), gasometria, hemograma e função orgânica. (Resultados em 📋 Dados.)`,part:`Inclua o essencial: lactato e culturas antes do antibiótico. (Liberei o laboratório.)`,miss:`Pilares: lactato (perfusão) e culturas antes do ATB, gasometria, hemograma, função orgânica. (Resultados em 📋 Dados.)`},
+   teach:{reconhecer:`Lactato guia a ressuscitação; culturas guiam o foco/ATB e devem ser colhidas antes do antibiótico.`,
+    pensar:[`O que guia volume? Lactato.`,`O que guia o ATB? Culturas (sem atrasá-lo).`],
+    pegadinha:`Atrasar o antibiótico esperando colher todas as culturas.`,
+    decore:[`Lactato + culturas antes do ATB`,`Nunca atrasar o antibiótico pelas culturas`],
+    preceptor:`Culturas antes do ATB é o ideal; ATB no tempo é inegociável.`,erro:`Segurar o antibiótico por causa de exames.`}},
+  {type:'q',etapa:'Etapa 5 · Interpretar o lactato',q:`Lactato 5,2 mmol/L. O que isso significa e como usá-lo?`,
+   accept:['hipoperfusao','perfusao','gravidade','choque','elevado','alto'],partial:['lactato','ressuscitacao'],
+   fb:{good:`Lactato alto (>2, e aqui >4) reflete hipoperfusão/gravidade; serve para guiar a ressuscitação e deve cair com o tratamento.`,miss:`Lactato >2 marca hipoperfusão; >4 é gravidade. Ele guia a ressuscitação — meça seriadamente e espere queda.`},
+   teach:{reconhecer:`Lactato elevado = sofrimento tecidual por hipoperfusão; quanto maior, pior o prognóstico.`,
+    pensar:[`Lactato é termômetro de perfusão.`,`Reavalie seriado: deve cair com volume/vasopressor.`],
+    decore:[`Lactato >2 = hipoperfusão; >4 = gravidade`,`Clareamento do lactato = meta de ressuscitação`],
+    simples:`O lactato sobe quando os tecidos ficam sem oxigênio. É o medidor de quão "sufocado" o corpo está — e tem que baixar com o tratamento.`,
+    preceptor:`Não meça lactato uma vez só: o que importa é ele cair.`,erro:`Ignorar o lactato seriado.`}},
+  {type:'q',etapa:'Etapa 6 · Tratamento',q:`Qual o pacote terapêutico imediato?`,
+   accept:['antibiotico','volume','cristaloide','noradrenalina','ressuscitacao'],partial:['atb','vasopressor','fluido','soro'],
+   fb:{good:`Cristaloide balanceado (Ringer) ~30 mL/kg nas 3 h em bólus reavaliados + antibiótico na 1ª hora + noradrenalina se PAM<65.`,part:`Os três pilares: volume (~30 mL/kg em bólus reavaliados), antibiótico na 1ª hora, noradrenalina se persistir hipotenso.`,miss:`Volume (30 mL/kg em bólus reavaliados, Ringer), antibiótico na 1ª hora direcionado, noradrenalina para PAM ≥65.`},
+   teach:{reconhecer:`Pacote: volume em bólus reavaliados + antibiótico precoce + noradrenalina se necessário.`,
+    pensar:[`1) Volume em bólus, reavaliando.`,`2) Antibiótico na 1ª hora, direcionado.`,`3) Noradrenalina para PAM ≥65.`],
+    pegadinha:`Tratar os 30 mL/kg como infusão cega — o livro manda dar em bólus e REAVALIAR.`,
+    decore:[`Volume 30 mL/kg/3h em bólus reavaliados`,`ATB na 1ª hora`,`Noradrenalina = 1º vasopressor (PAM≥65)`],
+    simples:`Os vasos estão largos e perdendo pressão. Primeiro enchemos com soro; se não sustenta, a noradrenalina aperta os vasos.`,
+    preceptor:`Volume, antibiótico e vasopressor — e o antibiótico é o que mais salva.`,erro:`Atrasar o antibiótico (o erro que mais mata na sepse).`}},
+  {type:'resumo',dx:`Choque séptico de foco pulmonar`,
+   criterios:`Sepse = infecção + ↑≥2 SOFA. qSOFA (FR≥22, PAS≤100, mental) rastreia. Choque séptico = vasopressor p/ PAM≥65 + lactato >2.`,
+   conduta:`Cristaloide balanceado 30 mL/kg/3h em bólus reavaliados; antibiótico na 1ª hora direcionado; noradrenalina p/ PAM≥65; lactato seriado.`,
+   pega:`O livro preconiza 30 mL/kg nas 3 h, mas em bólus reavaliados — não infusão cega. Culturas antes do ATB, sem atrasar o antibiótico.`}
+ ]},
+
+/* ---------------- CAD grave ---------------- */
+{id:'cad1',topic:'cad',sev:'Grave',who:'Mulher, 22 anos',chip:'Sala Vermelha',
+ hist:`DM1, parou a insulina há 3 dias. <span class="hl">Náusea, vômitos, dor abdominal e respiração profunda</span>; hálito cetônico.`,
+ baseData:['vitais','exame','labs'],
+ data:[
+  {key:'vitais',kind:'vitals',vals:[['FC','118','bpm','warn'],['PA','100/60','mmHg'],['SatO₂','98','%'],['FR','28','irpm','warn'],['Glasgow','14','']]},
+  {key:'exame',kind:'exam',cap:'Exame físico',text:`Desidratada, mucosas secas, taquipneica (ritmo de Kussmaul). Dor abdominal difusa.`},
+  {key:'labs',kind:'labs',cap:'Exames iniciais',items:[['Glicemia','480 mg/dL','hi'],['pH','6,98','lo'],['HCO₃','7 mmol/L','lo'],['Cetonemia','positiva','hi'],['K⁺','5,4 mEq/L','hi'],['Na⁺','132','lo']]}
+ ],
+ fluxo:[`Hiperglicemia + acidose + cetona`,`CAD (gravidade pelo pH/HCO₃)`,`1) Volume (NaCl 0,9%)`,`2) Potássio (regra do 3,3)`,`3) Insulina 0,1 U/kg/h`,`Glicemia <250 → SG 5%`],
+ blocks:[
+  {type:'q',etapa:'Etapa 1 · Existe CAD?',q:`Com os exames em 📋 Dados, há cetoacidose diabética?`,
+   accept:['sim','cetoacidose','cad','cetoacidose diabetica'],
+   fb:{good:`Sim — glicemia >250 + acidose (pH<7,3) + cetonemia positiva fecham CAD.`,miss:`A tríade está completa: glicemia 480 (>250) + pH 6,98 (acidose) + cetonemia positiva = CAD.`},
+   teach:{reconhecer:`CAD = glicemia >250 + acidose metabólica (pH<7,3) + cetonemia/cetonúria.`,
+    pensar:[`Tem a tríade? Sim → CAD.`],decore:[`CAD = glicemia >250 + pH<7,3 + cetonemia`],
+    simples:`Sem insulina, o corpo queima gordura e fabrica ácido (cetona); o sangue azeda.`,
+    preceptor:`A tríade abre o diagnóstico — confirme os três antes de seguir.`}},
+  {type:'q',etapa:'Etapa 2 · Gravidade',q:`Qual a gravidade? (use pH/HCO₃)`,
+   accept:['grave'],partial:['moderada','leve'],
+   fb:{good:`Grave — pH <7,00 e HCO₃ <10.`,part:`Classifique pelo pH/HCO₃: aqui pH 6,98 e HCO₃ 7 → grave.`,miss:`Gravidade pelo pH/HCO₃: leve 7,25–7,30 (HCO₃ 15–18); moderada 7,00–7,24 (10–14); grave <7,00 (<10). Aqui é grave.`},
+   teach:{reconhecer:`Gravidade da CAD é definida pelo pH/HCO₃ (e estado mental), não pela glicemia.`,
+    pensar:[`pH 6,98 e HCO₃ 7 → grave.`],pegadinha:`Classificar pela glicemia.`,
+    decore:[`Grave: pH<7,00 / HCO₃<10`,`Leve 7,25–7,30 · moderada 7,00–7,24`],
+    preceptor:`A glicemia abre o diagnóstico; o pH define a gravidade.`,erro:`Achar que "glicemia 600" é mais grave que "pH 6,9".`}},
+  {type:'q',etapa:'Etapa 3 · Primeira medida',q:`Qual a PRIMEIRA medida terapêutica?`,
+   accept:['volume','hidratacao','soro','reposicao volemica','cristaloide','salina','nacl'],reject:['insulina','bicarbonato'],
+   fb:{good:`Reposição volêmica — NaCl 0,9% em bólus (ex.: 2 L). Insulina só depois e com o K conferido.`,miss:`Pegadinha clássica: NÃO se começa pela insulina. Primeiro VOLUME (NaCl 0,9% em bólus).`},
+   teach:{reconhecer:`Paciente desidratado por dias de glicosúria → volume primeiro.`,
+    pensar:[`O mais ameaçador agora é a hipovolemia.`,`Volume → depois K → depois insulina.`],
+    pegadinha:`Começar pela insulina piora a perfusão e desloca o K bruscamente.`,
+    decore:[`Sequência: 1) Volume → 2) Potássio → 3) Insulina`],
+    simples:`Ela passou dias urinando glicose e perdendo água; chega seca. Insulina antes do líquido pode piorar tudo.`,
+    preceptor:`Na CAD, soro antes de insulina. Sempre.`,erro:`Começar insulina antes da hidratação (o erro que mais reprova na CAD).`}},
+  {type:'q',etapa:'Etapa 4 · Interpretar o potássio',q:`K⁺ está 5,4. Como interpretar e o que muda?`,
+   accept:['repor 25','25 meq','repor por litro','observar','cai com insulina','desloca'],partial:['potassio','repor'],
+   fb:{good:`K 3,3–5,0 → repor 25 mEq por litro de solução. Atenção: a insulina vai baixar o K (entra na célula), então monitore.`,miss:`Regra do K: <3,3 → repor antes da insulina; 3,3–5,0 → 25 mEq/L; >5,0 → só repor quando <5. A insulina desloca K para a célula.`},
+   teach:{reconhecer:`O K sérico inicial engana: o K corporal total está baixo e vai cair com a insulina.`,
+    pensar:[`<3,3 → repor antes da insulina.`,`3,3–5,0 → 25 mEq/L.`,`>5,0 → só repor quando <5.`],
+    pegadinha:`Ver K "normal/alto" e relaxar.`,
+    decore:[`K <3,3 → repor antes da insulina`,`Insulina baixa o K (entra na célula)`],
+    simples:`A insulina empurra o potássio para dentro das células; se já estiver baixo, pode parar o coração.`,
+    preceptor:`Nunca ligue a insulina sem olhar o potássio.`,erro:`Iniciar insulina com K <3,3.`}},
+  {type:'q',etapa:'Etapa 5 · Pode iniciar insulina?',q:`Com K 5,4 e volume em curso: pode iniciar insulina?`,
+   accept:['sim','pode'],partial:['apos volume','com potassio'],reject:['nao iniciar'],
+   fb:{good:`Sim — K ≥3,3 e volume em curso permitem iniciar. (Se K fosse <3,3, repor K antes.)`,part:`Pode, pois K ≥3,3 e há reposição volêmica; só não iniciaria se K <3,3.`,miss:`Como K ≥3,3 e o volume já corre, pode iniciar a insulina. A trava é K <3,3.`},
+   teach:{reconhecer:`Insulina liberada quando o volume está em curso e K ≥3,3.`,
+    pensar:[`K <3,3? Não → pode iniciar.`,`Volume em curso? Sim.`],
+    decore:[`Trava da insulina = K <3,3`],preceptor:`A insulina espera o volume e o potássio, não a glicemia.`}},
+  {type:'q',etapa:'Etapa 6 · Esquema de insulina',q:`Qual o esquema de insulina IV?`,
+   accept:['0,1','0.1 u kg','01 u kg','bolus 0,1','infusao 0,1'],partial:['insulina regular','infusao continua','bomba'],
+   fb:{good:`Insulina regular IV: ~0,1 U/kg em bolus + 0,1 U/kg/h (ou 0,14 U/kg/h sem bolus). Glicemia <250 → adicionar SG 5%.`,part:`É insulina regular IV: ~0,1 U/kg bolus + 0,1 U/kg/h. Glicemia <250 → SG 5%.`,miss:`Insulina regular IV: bolus 0,1 U/kg + infusão 0,1 U/kg/h. Glicemia <250 → SG 5% mantendo a insulina para fechar a cetose.`},
+   teach:{reconhecer:`Insulina regular IV em infusão contínua, titulada.`,
+    pensar:[`0,1 U/kg/h.`,`Glicemia <250 → entra SG 5% e a insulina continua.`],
+    pegadinha:`Desligar a insulina quando a glicose normaliza — ela fecha a CETOSE, não só a glicemia.`,
+    decore:[`Insulina 0,1 U/kg/h`,`Glicemia <250 → SG 5%, insulina continua`],
+    simples:`A insulina apaga o incêndio de ácido; quando a glicose cai, damos açúcar junto para manter a insulina até o ácido sumir.`,
+    preceptor:`A meta da insulina é a cetose, não só a glicemia.`,erro:`Parar a insulina cedo demais.`}},
+  {type:'resumo',dx:`Cetoacidose diabética grave`,
+   criterios:`Glicemia >250 + acidose (pH<7,3) + cetonemia. Grave: pH<7,00 e HCO₃<10. Mau prognóstico: alteração do estado mental.`,
+   conduta:`1) Volume (NaCl 0,9% bólus). 2) Conferir K (regra <3,3 / 3,3–5 / >5). 3) Insulina 0,1 U/kg/h. 4) SG 5% quando glicemia <250. Bicarbonato só se pH ≤6,9.`,
+   pega:`Nunca comece pela insulina e nunca a infunda com K <3,3.`}
+ ]},
+
+/* ---------------- Intoxicação por organofosforado ---------------- */
+{id:'intox1',topic:'intox',sev:'Grave',who:'Mulher, 32 anos',chip:'Discursiva CITTÁ',
+ hist:`Encontrada <span class="hl">desacordada</span> em casa. Familiares relatam uso de "alguma coisa" com álcool, passado de depressão e carta de despedida. Vestígios de vômito e diarreia.`,
+ baseData:['vitais','exame'],
+ data:[
+  {key:'vitais',kind:'vitals',vals:[['FC','48','bpm','warn'],['PA','90/40','mmHg','warn'],['SatO₂','92','%'],['FR','16','irpm'],['Pupilas','mióticas','','warn']]},
+  {key:'exame',kind:'exam',cap:'Exame físico',text:`Comatosa, sem resposta. Diaforese, fasciculações e broncorreia. Murmúrio com roncos. Sialorreia e lacrimejamento.`}
+ ],
+ fluxo:[`Coma + miose + secreções + fasciculações`,`Toxíndrome colinérgica`,`Organofosforado/carbamato`,`ABC + descontaminação`,`Atropina (titular pela secreção) + pralidoxima`],
+ blocks:[
+  {type:'q',etapa:'Etapa 1 · Toxíndrome',q:`Pelos achados (📋 Dados), qual a síndrome de intoxicação (toxíndrome)?`,
+   accept:['colinergica','colinergico','muscarinica','sindrome colinergica'],partial:['organofosforado','carbamato'],reject:['anticolinergica','adrenergica','opioide'],
+   fb:{good:`Síndrome colinérgica: miose, diaforese, fasciculações, broncorreia, bradicardia, hipersecreção.`,part:`Os achados (miose, sudorese, fasciculações, broncorreia) são de excesso colinérgico.`,miss:`Miose + sudorese + fasciculações + broncorreia + bradicardia = COLINÉRGICA. Não confunda com anticolinérgica (midríase, pele seca).`},
+   teach:{reconhecer:`Tudo "molhado" (sialorreia, lacrimejamento, broncorreia) + miose + fasciculações = colinérgico.`,
+    pensar:[`Pupila? Miótica.`,`Secreções? Aumentadas.`,`Molhado + miose → colinérgico.`],
+    pegadinha:`Confundir com anticolinérgico — o oposto: midríase, pele seca e quente.`,
+    decore:[`Colinérgico = miose + secreções (molhado)`,`Anticolinérgico = midríase + seco`],
+    simples:`O corpo está encharcado: pupila pequena, baba, lágrima, secreção no pulmão. É excesso do sinal que manda secretar.`,
+    preceptor:`Pupila + secreções resolvem a maioria das toxíndromes na prova.`,erro:`Trocar colinérgico por anticolinérgico (e inverter o antídoto).`}},
+  {type:'q',etapa:'Etapa 2 · Substância',q:`Qual a substância mais provável?`,
+   accept:['organofosforado','organofosforados','carbamato','inseticida','agrotoxico','chumbinho'],partial:['veneno','praga'],
+   fb:{good:`Organofosforado/carbamato (inseticidas, "chumbinho") — inibem a acetilcolinesterase.`,part:`Pense em inibidor de colinesterase: organofosforado ou carbamato.`,miss:`A toxíndrome colinérgica aponta organofosforado/carbamato (inseticidas), por inibição da acetilcolinesterase.`},
+   teach:{reconhecer:`Colinérgico → inibidor da acetilcolinesterase (organofosforado/carbamato).`,
+    pensar:[`Sobra de acetilcolina → inibidor de colinesterase.`,`Contexto (agrotóxico, autoextermínio) reforça.`],
+    decore:[`Colinérgico → organofosforado/carbamato`,`Mecanismo: inibe a acetilcolinesterase`],
+    preceptor:`Ligue a toxíndrome ao mecanismo: colinérgico = sobra de acetilcolina.`}},
+  {type:'q',etapa:'Etapa 3 · Conduta inicial',q:`Quais as medidas iniciais de abordagem?`,
+   accept:['suporte','via aerea','descontaminacao','estabilizacao','abc','oxigenio'],partial:['remover roupa','lavar','monitorizar'],
+   fb:{good:`Estabilização (via aérea/O₂, monitor), descontaminação (remover roupas, lavar a pele) e antídoto.`,part:`Comece pelo ABC e descontaminação (pele/roupa continua expondo), depois o antídoto.`,miss:`Estabilizar (ABC — broncorreia ameaça a via aérea), descontaminar (roupas/pele) e antídoto.`},
+   teach:{reconhecer:`ABC + descontaminação vêm antes do antídoto.`,
+    pensar:[`ABC primeiro (broncorreia/bradicardia matam).`,`Descontaminar (roupa/pele).`,`Depois antídoto.`],
+    pegadinha:`Esquecer a proteção da equipe e a descontaminação.`,
+    decore:[`ABC → descontaminação → antídoto`],preceptor:`Estabilizar e descontaminar vêm antes do antídoto, sempre.`,erro:`Ir direto ao antídoto e esquecer a via aérea.`}},
+  {type:'q',etapa:'Etapa 4 · Antídoto',q:`Existe antídoto? Qual?`,
+   accept:['atropina'],partial:['pralidoxima'],reject:['naloxona','flumazenil','n-acetilcisteina'],
+   fb:{good:`Atropina (antagoniza os efeitos muscarínicos, titulada pela secreção respiratória) + pralidoxima (reativa a colinesterase).`,part:`O antídoto-chave é a atropina; a pralidoxima complementa nos organofosforados.`,miss:`Antídoto: ATROPINA (+ pralidoxima nos organofosforados). Naloxona é para opioide; flumazenil para BZD; NAC para paracetamol.`},
+   teach:{reconhecer:`Excesso colinérgico → atropina; organofosforado → somar pralidoxima.`,
+    pensar:[`Bloquear muscarínico → atropina.`,`Titular a atropina pela secreção pulmonar, não pela FC/pupila.`],
+    pegadinha:`Tabela de antídotos: opioide→naloxona; BZD→flumazenil (restrito); paracetamol→NAC; betabloqueador→glucagon; metanol→fomepizol/etanol; metaHb→azul de metileno; digoxina→FAB.`,
+    decore:[`Organofosforado → atropina + pralidoxima`,`Titular a atropina pela broncorreia`],
+    simples:`A atropina seca as secreções e protege o pulmão; a pralidoxima conserta o freio que o veneno travou.`,
+    preceptor:`Atropinize até secar o pulmão.`,erro:`Dosar a atropina pela FC e deixar o pulmão encharcado.`}},
+  {type:'resumo',dx:`Intoxicação por organofosforado/carbamato — síndrome colinérgica`,
+   criterios:`Toxíndrome colinérgica: miose, sudorese, fasciculações, broncorreia, bradicardia, hipersecreção (SLUDGE/DUMBELS).`,
+   conduta:`Estabilização + descontaminação (roupa/pele) + ATROPINA (titulada pela secreção) + pralidoxima nos organofosforados.`,
+   pega:`Antídotos: opioide→naloxona; BZD→flumazenil (restrito); paracetamol→NAC; betabloqueador→glucagon; metanol→fomepizol/etanol; metaHb→azul de metileno; digoxina→FAB.`}
+ ]},
+
+/* ---------------- Grande queimado ---------------- */
+{id:'queim1',topic:'queim',sev:'Grande queimado',who:'Homem, 70 kg',chip:'Plantão',
+ hist:`Vítima de incêndio domiciliar. <span class="hl">Queimaduras de 2º grau</span> em todo o tronco anterior e todo o membro superior direito. Rouquidão e fuligem nas narinas.`,
+ baseData:['vitais','exame'],
+ data:[
+  {key:'vitais',kind:'vitals',vals:[['FC','110','bpm','warn'],['PA','120/80','mmHg'],['SatO₂','95','%'],['FR','22','irpm'],['Peso','70','kg']]},
+  {key:'exame',kind:'exam',cap:'Exame físico',text:`Estridor leve, fuligem perinasal e escarro carbonáceo — suspeita de lesão inalatória. Queimaduras de 2º grau em tronco anterior e MSD.`}
+ ],
+ fluxo:[`Queimadura + fumaça`,`Via aérea ameaçada? → intubar cedo`,`SCQ pela Regra dos Nove (sem 1º grau)`,`Parkland 4 × kg × SCQ (Ringer)`,`½ nas primeiras 8 h`,`Titular pela diurese (0,5 mL/kg/h)`],
+ blocks:[
+  {type:'q',etapa:'Etapa 1 · Prioridade',q:`Antes da reposição: qual a maior preocupação imediata?`,
+   accept:['via aerea','intubacao','lesao inalatoria','via aerea precoce'],partial:['inalacao','edema','estridor'],
+   fb:{good:`Lesão de via aérea por inalação — dos fatores mais associados à mortalidade. Suspeita → intubação precoce.`,part:`É a via aérea: fuligem + rouquidão + estridor = lesão inalatória → intubar cedo.`,miss:`Lesão inalatória é o maior preditor de mortalidade. Sinais (fuligem, rouquidão, estridor) → intubação PRECOCE antes do edema.`},
+   teach:{reconhecer:`Fuligem perinasal + rouquidão + estridor + escarro carbonáceo = lesão inalatória.`,
+    pensar:[`Antes do cálculo de volume: a via aérea está ameaçada?`,`Sim → intubar precoce, antes de o edema fechar.`],
+    pegadinha:`Focar no Parkland e esquecer a via aérea.`,
+    decore:[`Lesão inalatória = maior preditor de mortalidade`,`Sinais de inalação → intubação precoce`],
+    simples:`Ele respirou fumaça quente; a garganta vai inchar e fechar. Melhor colocar o tubo agora, com calma.`,
+    preceptor:`Na queimadura, a via aérea decide antes do volume.`,erro:`Adiar a intubação até a via aérea fechar.`}},
+  {type:'q',etapa:'Etapa 2 · SCQ',q:`Pela Regra dos Nove, qual a SCQ? (tronco anterior + todo MSD)`,
+   accept:['27','27%','vinte e sete'],partial:['regra dos nove','18','9'],
+   fb:{good:`Tronco anterior 18% + membro superior inteiro 9% = 27%. A Regra dos Nove NÃO conta o 1º grau.`,part:`Some: tronco anterior 18% + MS inteiro 9% = 27%.`,miss:`Regra dos Nove: tronco anterior 18% + todo o MS 9% = 27% (não se conta 1º grau).`},
+   teach:{reconhecer:`Regra dos Nove em múltiplos de 9; some só 2º grau ou pior.`,
+    pensar:[`Tronco anterior = 18; MS inteiro = 9 → 27%.`,`Exclua o 1º grau.`],
+    pegadinha:`Incluir o eritema de 1º grau na conta.`,
+    decore:[`Cabeça 9 · cada braço 9 · tronco ant. 18 · dorso 18 · cada perna 18 · genitália 1`,`1º grau NÃO entra na SCQ`],
+    preceptor:`A SCQ guia o volume; contar 1º grau infla a hidratação.`,erro:`Contar o 1º grau na SCQ.`}},
+  {type:'q',etapa:'Etapa 3 · Parkland',q:`Pela fórmula de Parkland (4 mL × kg × %SCQ), qual o volume das 24 h e quanto nas primeiras 8 h?`,
+   accept:['7560','7.560','3780','3.780','4 ml','parkland'],partial:['ringer','metade','8 horas'],
+   fb:{good:`4 × 70 × 27 = 7.560 mL de Ringer lactato em 24 h; METADE (3.780 mL) nas primeiras 8 h.`,part:`Aplique 4 × 70 × 27 = 7.560 mL/24 h; metade nas 8 h iniciais (3.780 mL).`,miss:`Parkland: 4 × peso × SCQ = 4×70×27 = 7.560 mL de Ringer lactato/24 h; metade nas primeiras 8 horas.`},
+   teach:{reconhecer:`Parkland = 4 mL × peso × %SCQ; metade nas primeiras 8 h (do trauma), metade nas 16 h seguintes.`,
+    pensar:[`Volume 24h = 4 × 70 × 27 = 7.560 mL.`,`½ nas 8 h iniciais = 3.780 mL.`,`Solução: Ringer lactato.`],
+    pegadinha:`Contar as 8 h a partir da chegada — o relógio começa na QUEIMADURA.`,
+    decore:[`Parkland: 4 mL × kg × %SCQ`,`½ nas primeiras 8 h (do trauma)`,`Ringer lactato`],
+    simples:`Conta simples para o 1º dia: 4 × peso × % queimada; metade vai mais rápido, nas 8 primeiras horas.`,
+    preceptor:`As 8 horas contam do acidente, não da porta do hospital.`,erro:`Iniciar a contagem das 8 h na admissão.`}},
+  {type:'q',etapa:'Etapa 4 · Meta',q:`Qual o parâmetro e a meta para guiar a reposição?`,
+   accept:['diurese','debito urinario','0,5 ml'],partial:['urina','0.5','reavaliar'],
+   fb:{good:`A diurese guia: meta 0,5 mL/kg/h no adulto (1 mL/kg/h em crianças).`,part:`O parâmetro é a diurese; meta no adulto 0,5 mL/kg/h.`,miss:`Guie pela DIURESE: 0,5 mL/kg/h no adulto (1 mL/kg/h em crianças). Parkland é só estimativa.`},
+   teach:{reconhecer:`A diurese é o termômetro da ressuscitação; Parkland é só o chute inicial.`,
+    pensar:[`Parkland estima; a resposta manda.`,`Titule o volume pela diurese-alvo.`],
+    pegadinha:`Seguir o número de Parkland "cego".`,
+    decore:[`Diurese-alvo adulto: 0,5 mL/kg/h`,`Parkland = estimativa; a urina manda`],
+    simples:`A conta dá um chute; quem diz se está certo é o xixi.`,
+    preceptor:`Trate o paciente, não a fórmula.`,erro:`Ignorar a diurese.`}},
+  {type:'resumo',dx:`Grande queimado (2º grau >20% SCQ) com suspeita de lesão inalatória`,
+   criterios:`Grande queimado: 2º grau >20%, 3º grau >10%, períneo, 3º em face/mãos/pés/pescoço/axila, elétrica. Lesão inalatória = maior preditor de mortalidade.`,
+   conduta:`Via aérea precoce se inalação. SCQ pela Regra dos Nove (sem 1º grau). Parkland 4 mL×kg×SCQ de Ringer, metade em 8 h. Diurese-alvo 0,5 mL/kg/h.`,
+   pega:`O livro classifica por profundidade (superficial / parcial superficial e profunda / total). O sistema 1º–4º grau é equivalente didático.`}
+ ]},
+
+/* ---------------- Abdome agudo vascular ---------------- */
+{id:'abd1',topic:'abd',sev:'Cirúrgico',who:'Homem, 68 anos',chip:'Plantão',
+ hist:`Fibrilação atrial crônica, sem anticoagulação. <span class="hl">Dor abdominal súbita e intensa</span> há 4 horas.`,
+ baseData:['vitais'],
+ data:[
+  {key:'vitais',kind:'vitals',vals:[['FC','112','bpm','warn'],['PA','100/60','mmHg'],['SatO₂','96','%'],['FR','22','irpm'],['T','37,2','°C']]},
+  {key:'exame',kind:'exam',cap:'Exame físico',text:`Dor difusa muito intensa, porém abdome pouco doloroso à palpação (dor desproporcional ao exame). Peristalse reduzida.`},
+  {key:'labs',kind:'labs',cap:'Laboratório',items:[['Lactato','4,8 mmol/L','hi'],['Leucócitos','17.000','hi'],['pH','7,30','lo']]},
+  {key:'img',kind:'image',cap:'Imagem',text:`AngioTC de abdome: falha de enchimento em artéria mesentérica superior, com alça de delgado hipocaptante.`}
+ ],
+ fluxo:[`Dor desproporcional ao exame`,`Idoso + FA → fonte embólica`,`Abdome agudo vascular`,`Isquemia mesentérica`,`AngioTC`,`Analgesia + cirurgia precoce`],
+ blocks:[
+  {type:'action',etapa:'Etapa 1 · Primeira atitude',q:`Dor abdominal súbita e intensa. O que você faz primeiro?`,reveal:['exame'],
+   options:[
+    {label:`Examinar o abdome e estabilizar`,best:true,reveal:['exame']},
+    {label:`Solicitar imagem antes de examinar`},
+    {label:`Liberar analgesia depois da cirurgia`},
+    {label:`Aguardar evolução em observação`}],
+   fb:{good:`Certo — exame físico e estabilização orientam a hipótese e a urgência. (Exame em 📋 Dados.)`,part:`O exame físico vem primeiro: é ele que revela a dor desproporcional. (Liberei o exame.)`},
+   teach:{reconhecer:`O exame físico do abdome direciona o padrão (inflamatório, obstrutivo, perfurativo, vascular, hemorrágico).`,
+    pensar:[`Examine antes de pedir imagem dirigida.`],decore:[`5 padrões: inflamatório, obstrutivo, perfurativo, vascular, hemorrágico`],
+    preceptor:`O exame do abdome é o que escolhe a imagem certa depois.`}},
+  {type:'q',etapa:'Etapa 2 · Classificação',q:`Dor intensa desproporcional ao exame + FA sem anticoagulação. Qual o padrão de abdome agudo?`,
+   accept:['vascular','abdome agudo vascular'],partial:['isquemia','isquemia mesenterica'],
+   fb:{good:`Padrão VASCULAR — a dor desproporcional ao exame é a red flag.`,part:`É o padrão vascular (isquemia mesentérica).`,miss:`Dor desproporcional ao exame + fonte embólica (FA) = abdome agudo VASCULAR.`},
+   teach:{reconhecer:`Dor desproporcional ao exame no idoso com fonte embólica = padrão vascular.`,
+    pensar:[`A dor é muito maior que os achados? → vascular.`,`Tem fonte de êmbolo (FA)? → reforça.`],
+    pegadinha:`Subestimar pelo abdome "inocente" à palpação.`,
+    decore:[`Dor desproporcional = isquemia mesentérica`,`FA sem anticoagulação = fonte embólica`],
+    simples:`Ele sente uma dor enorme, mas a barriga quase não dói ao toque — esse descompasso avisa que o intestino está sem sangue.`,
+    preceptor:`Dor desproporcional ao exame no idoso com FA é isquemia mesentérica até prova em contrário.`,erro:`Mandar para casa porque "o abdome está mole".`}},
+  {type:'q',etapa:'Etapa 3 · Hipótese',q:`Qual a principal hipótese diagnóstica?`,
+   accept:['isquemia mesenterica','isquemia','mesenterica','embolia mesenterica'],partial:['trombose','vascular'],
+   fb:{good:`Isquemia mesentérica (provável embolia por FA).`,part:`É isquemia mesentérica, provavelmente embólica.`,miss:`FA sem anticoagulação + dor desproporcional = isquemia mesentérica (embólica).`},
+   teach:{reconhecer:`A hipótese une o padrão vascular à fonte embólica (FA).`,pensar:[`Vascular + FA → embolia mesentérica.`],
+    decore:[`Isquemia mesentérica = grande armadilha do idoso`],preceptor:`Tempo é intestino: a suspeita já aciona a investigação rápida.`}},
+  {type:'q',etapa:'Etapa 4 · Exame complementar',q:`Qual o exame de imagem de escolha?`,reveal:['labs','img'],
+   accept:['tomografia','tc','angiotomografia','angiotc','tc de abdome'],partial:['tomografia computadorizada'],reject:['ultrassom','usg','raio x simples'],
+   fb:{good:`AngioTC — melhor para doenças vasculares/inflamatórias/renais. (Laboratório e angioTC em 📋 Dados.)`,part:`É TC/angioTC. USG é melhor para o andar superior do abdome. (Liberei lab e imagem.)`,miss:`Suspeita vascular → angioTC. USG é para o andar superior. (Resultados em 📋 Dados.)`},
+   teach:{reconhecer:`A imagem segue a hipótese: vascular/inflamatória/renal → TC; biliar (andar superior) → USG.`,
+    pensar:[`Suspeita vascular → angioTC.`],pegadinha:`Pedir USG para tudo.`,
+    decore:[`Vascular/inflamatória/renal → TC/angioTC`,`Andar superior (biliar) → USG`],
+    preceptor:`Escolha a imagem pela hipótese, não por reflexo.`,erro:`Insistir em USG quando a suspeita é vascular.`}},
+  {type:'q',etapa:'Etapa 5 · Conduta',q:`Você deve segurar a analgesia para "não mascarar" o quadro?`,
+   accept:['nao','analgesia','tratar dor','ma pratica'],partial:['cirurgia','avaliar cirurgico'],
+   fb:{good:`NÃO. Deixar de analgesar por esse receio é considerado má prática. Analgese e acione a cirurgia (revascularização/ressecção).`,miss:`Mito perigoso: não analgesar para "não mascarar" é má prática médica. Trate a dor e avalie cirurgia precoce.`},
+   teach:{reconhecer:`Analgesar é correto; a cirurgia precoce define o prognóstico na isquemia mesentérica.`,
+    pensar:[`A analgesia atrapalha o diagnóstico? A evidência diz que não.`,`Analgese, monitorize e chame o cirurgião.`],
+    pegadinha:`O mito de "não dar analgésico para não mascarar".`,
+    decore:[`Pode e deve analgesar a dor abdominal aguda`,`Não analgesar "para não mascarar" = má prática`],
+    simples:`Aliviar a dor não esconde a doença — dá para tratar a dor e investigar ao mesmo tempo.`,
+    preceptor:`Sofrimento não é ferramenta diagnóstica.`,erro:`Deixar o paciente sem analgesia "para não mascarar".`}},
+  {type:'resumo',dx:`Abdome agudo vascular — isquemia mesentérica (embólica por FA)`,
+   criterios:`Red flags: dor desproporcional ao exame, idoso, fonte embólica (FA). Lactato e leucocitose ajudam, mas o quadro pode ser inespecífico.`,
+   conduta:`Estabilizar, analgesar (não "mascarar" é mito), angioTC, avaliação cirúrgica precoce (revascularização/ressecção).`,
+   pega:`Padrões do abdome agudo: inflamatório, obstrutivo, perfurativo, vascular, hemorrágico. Em mulher fértil com dor abdominal, sempre afastar gravidez ectópica.`}
+ ]}
+];
+const PLANTAO=[...PLANTAO_A,...PLANTAO_B];
+</script>
+<script id="content2">
+/* ---------- ECG CHALLENGE ---------- */
+const ECG_ITEMS=[
+ {id:'e_sinus',type:'sinus',lead:'DII',vitals:[['FC','78','bpm'],['PA','120/80','mmHg']],
+  ritmo:{accept:['sinusal','ritmo sinusal','normal'],fb:'Onda P antes de cada QRS, regular, FC normal → ritmo sinusal.'},
+  fc:{accept:['78','75','80','normal','60','70'],fb:'~78 bpm.'},
+  estab:'estavel',
+  conduta:{accept:['nenhuma','observar','nada','investigar','seguir'],partial:['conservador'],fb:'Ritmo normal — nenhuma intervenção emergencial.'}},
+ {id:'e_fa',type:'fa',lead:'DII',vitals:[['FC','148','bpm','warn'],['PA','128/78','mmHg']],
+  ritmo:{accept:['fibrilacao atrial','fa','fibrilacao'],fb:'Irregularmente irregular + ausência de onda P = fibrilação atrial.'},
+  fc:{accept:['148','150','140','rapida','alta'],fb:'~148 bpm (resposta rápida).'},
+  estab:'estavel',
+  conduta:{accept:['controle de frequencia','betabloq','diltiazem','verapamil','metoprolol'],partial:['frequencia','amiodarona'],fb:'Estável → controle de frequência (BB ou BCC). Disfunção grave → amiodarona/digoxina. Instável → cardioversão sincronizada 200 J.'}},
+ {id:'e_flutter',type:'flutter',lead:'DII',vitals:[['FC','150','bpm','warn'],['PA','118/72','mmHg']],
+  ritmo:{accept:['flutter','flutter atrial'],partial:['atrial'],fb:'Ondas F em "dente de serra", regular → flutter atrial.'},
+  fc:{accept:['150','140','rapida'],fb:'~150 bpm (condução 2:1 clássica).'},
+  estab:'estavel',
+  conduta:{accept:['controle de frequencia','cardioversao','betabloq','diltiazem'],partial:['frequencia','ritmo'],fb:'Manejo semelhante à FA: controle de frequência/ritmo; cardioversão sincronizada se instável.'}},
+ {id:'e_tsv',type:'tsv',lead:'DII',vitals:[['FC','188','bpm','crit'],['PA','110/70','mmHg']],
+  ritmo:{accept:['tsv','supraventricular','taquicardia supraventricular'],partial:['qrs estreito'],fb:'QRS estreito, regular, muito rápido, sem P → TSV.'},
+  fc:{accept:['188','180','190','rapida'],fb:'~188 bpm.'},
+  estab:'estavel',
+  conduta:{accept:['manobra vagal','vagal','adenosina'],fb:'1º manobra vagal; se falhar, adenosina 6 mg bolus rápido (→12 mg). Instável → cardioversão sincronizada.'}},
+ {id:'e_tv',type:'tv',lead:'DII',vitals:[['FC','176','bpm','crit'],['PA','80/50','mmHg','crit']],
+  ritmo:{accept:['tv','taquicardia ventricular','ventricular'],partial:['qrs largo'],fb:'QRS largo, regular, monomórfico → TV (especialmente com cardiopatia prévia).'},
+  fc:{accept:['176','180','170','rapida'],fb:'~176 bpm.'},
+  estab:'instavel',
+  conduta:{accept:['cardioversao','cardioversao sincronizada'],partial:['choque sincronizado'],reject:['adenosina'],fb:'TV com pulso + instável → cardioversão sincronizada. Sem pulso → desfibrilação + RCP.'}},
+ {id:'e_fv',type:'fv',lead:'DII',vitals:[['FC','—','','crit'],['PA','sem pulso','','crit']],
+  ritmo:{accept:['fibrilacao ventricular','fv'],partial:['ventricular'],fb:'Ondulações caóticas, sem QRS organizado → fibrilação ventricular.'},
+  fc:{accept:['sem','indeterminada','nao','—','caotica'],fb:'Sem FC organizada.'},
+  estab:'instavel',
+  conduta:{accept:['desfibrilacao','desfibrilar','choque','rcp'],reject:['cardioversao sincronizada','adenosina'],fb:'FV = ritmo de parada chocável → DESFIBRILAÇÃO (não sincronizada) + RCP de alta qualidade.'}},
+ {id:'e_brady',type:'brady',lead:'DII',vitals:[['FC','38','bpm','crit'],['PA','88/54','mmHg','warn']],
+  ritmo:{accept:['bradicardia sinusal','bradicardia','sinusal lenta'],partial:['sinusal'],fb:'Onda P antes de cada QRS, regular, mas lenta → bradicardia sinusal.'},
+  fc:{accept:['38','40','35','baixa','lenta'],fb:'~38 bpm.'},
+  estab:'instavel',
+  conduta:{accept:['atropina'],partial:['marcapasso','1 mg'],fb:'Bradicardia instável → atropina 1 mg IV; refratário → marca-passo transcutâneo / dopamina / adrenalina.'}},
+ {id:'e_bav3',type:'bav3',lead:'DII',vitals:[['FC','32','bpm','crit'],['PA','84/50','mmHg','crit']],
+  ritmo:{accept:['bav total','bav 3','bloqueio total','bavt','terceiro grau'],partial:['bav','bloqueio av'],fb:'P e QRS independentes (dissociação AV) → BAV de 3º grau (total).'},
+  fc:{accept:['32','30','35','lenta','baixa'],fb:'QRS ~32 bpm (escape).'},
+  estab:'instavel',
+  conduta:{accept:['atropina','marcapasso'],partial:['1 mg','transcutaneo'],fb:'Atropina 1 mg (pode ser pouco eficaz em bloqueio infranodal) e marca-passo precoce.'}},
+ {id:'e_stemi',type:'stemi',lead:'DII',vitals:[['FC','62','bpm'],['PA','118/72','mmHg']],
+  ritmo:{accept:['supra','iam','infarto','stemi','iamcst','supradesnivel'],partial:['st elevado','isquemia'],fb:'Supradesnivelamento de ST → IAM com supra (avalie paredes/derivações).'},
+  fc:{accept:['62','60','normal'],fb:'~62 bpm.'},
+  estab:'estavel',
+  conduta:{accept:['angioplastia','reperfusao','cateterismo','trombolise'],partial:['antiagregacao'],fb:'IAMCST → reperfusão: angioplastia primária (superior) ou fibrinolítico se ATC indisponível, + antiagregação.'}},
+ {id:'e_bavhi',type:'bavhi',lead:'DII',vitals:[['FC','40','bpm','crit'],['PA','92/58','mmHg','warn']],
+  ritmo:{accept:['bav','bloqueio av','bloqueio avancado','segundo grau','mobitz'],partial:['bradiarritmia'],fb:'Ondas P bloqueadas intermitentemente (QRS "caindo") → BAV de 2º grau avançado.'},
+  fc:{accept:['40','38','lenta'],fb:'~40 bpm.'},
+  estab:'instavel',
+  conduta:{accept:['atropina','marcapasso'],partial:['transcutaneo'],fb:'Instável → atropina 1 mg + marca-passo; BAV avançado responde mal à atropina.'}}
+];
+
+/* ---------- GASOMETRIA CHALLENGE ---------- */
+const GASO_ITEMS=[
+ {id:'g1',vals:[['pH','7,12','lo'],['PaCO₂','24','lo'],['HCO₃','8','lo'],['BE','-18','lo'],['Lactato','7,0','hi']],
+  pH:{accept:['acidose','acidemia','acido'],fb:'pH 7,12 → acidemia.'},
+  primario:{accept:['metabolica','metabolico'],partial:['hco3 baixo'],reject:['respiratoria'],fb:'HCO₃ baixo (8) com pH baixo → acidose METABÓLICA.'},
+  comp:{accept:['compensacao respiratoria','respiratoria','hiperventil','adequada','paco2 baixo'],fb:'PaCO₂ baixo (24) = compensação respiratória (hiperventilação). Lactato alto sugere acidose lática.'},
+  misto:{accept:['simples','unico','um disturbio'],reject:['misto','dupla'],fb:'Um distúrbio primário com compensação que segue a direção esperada = SIMPLES.'},
+  final:{accept:['acidose metabolica','anion gap','anion-gap','lactica','metabolica de anion gap','metabolica com anion gap'],partial:['acidose metabolica'],fb:'Acidose metabólica de ânion-gap aumentado (lática), com compensação respiratória. Calcule o AG = Na − (Cl+HCO₃).'}},
+ {id:'g2',vals:[['pH','7,52','hi'],['PaCO₂','30','lo'],['HCO₃','24','']],
+  pH:{accept:['alcalose','alcalemia','alcalino'],fb:'pH 7,52 → alcalemia.'},
+  primario:{accept:['respiratoria','respiratorio'],partial:['paco2 baixo'],reject:['metabolica'],fb:'PaCO₂ baixo (30) com HCO₃ normal e pH alto → alcalose RESPIRATÓRIA.'},
+  comp:{accept:['aguda','sem compensacao','hco3 normal','nao compensada'],partial:['parcial'],fb:'HCO₃ ainda normal → distúrbio agudo (compensação renal é lenta).'},
+  misto:{accept:['simples','unico'],reject:['misto','dupla'],fb:'Distúrbio único = simples.'},
+  final:{accept:['alcalose respiratoria','respiratoria aguda','alcalose respiratoria aguda'],partial:['alcalose'],fb:'Alcalose respiratória aguda (HCO₃ ainda normal — compensação renal não teve tempo de agir).'}},
+ {id:'g3',vals:[['pH','7,30','lo'],['PaCO₂','60','hi'],['HCO₃','29','hi']],
+  pH:{accept:['acidose','acidemia'],fb:'pH 7,30 → acidemia.'},
+  primario:{accept:['respiratoria','respiratorio'],partial:['paco2 alto'],reject:['metabolica'],fb:'PaCO₂ alto (60) com pH baixo → acidose RESPIRATÓRIA.'},
+  comp:{accept:['cronica','metabolica','hco3 alto','compensacao renal','compensada'],partial:['parcial'],fb:'HCO₃ elevado (29) = compensação metabólica (renal) → quadro crônico/agudizado.'},
+  misto:{accept:['simples','unico'],reject:['misto','dupla'],fb:'Simples, com compensação crônica (renal).'},
+  final:{accept:['acidose respiratoria','respiratoria cronica','acidose respiratoria cronica','compensada'],partial:['acidose respiratoria'],fb:'Acidose respiratória crônica (compensada) — HCO₃ alto é a compensação, não alcalose metabólica.'}},
+ {id:'g4',vals:[['pH','7,46','hi'],['PaCO₂','46','hi'],['HCO₃','34','hi']],
+  pH:{accept:['alcalose','alcalemia'],fb:'pH 7,46 → alcalemia.'},
+  primario:{accept:['metabolica','metabolico'],partial:['hco3 alto'],reject:['respiratoria'],fb:'HCO₃ alto (34) com pH alto → alcalose METABÓLICA.'},
+  comp:{accept:['respiratoria','hipoventil','paco2 alto','compensada'],fb:'PaCO₂ subindo (46) = compensação respiratória (hipoventilação). Tratar corrigindo volume e potássio.'},
+  misto:{accept:['simples','unico'],reject:['misto','dupla'],fb:'Simples.'},
+  final:{accept:['alcalose metabolica','alcalose metabolica compensada'],partial:['alcalose'],fb:'Alcalose metabólica compensada (pensar vômito/diurético; repor volume, cloro e potássio).'}},
+ {id:'g5',vals:[['pH','7,18','lo'],['PaCO₂','55','hi'],['HCO₃','12','lo']],
+  pH:{accept:['acidose','acidemia'],fb:'pH 7,18 → acidemia grave.'},
+  primario:{accept:['mista','misto','dupla','metabolica e respiratoria'],partial:['metabolica','respiratoria'],fb:'HCO₃ baixo (acidose metabólica) E PaCO₂ alto (acidose respiratória) ao mesmo tempo → distúrbio MISTO (acidose dupla).'},
+  comp:{accept:['nao','sem compensacao','misto','dupla acidose'],fb:'Quando a "compensação" anda no sentido errado, suspeite de distúrbio misto. Aqui as duas acidoses se somam.'},
+  misto:{accept:['misto','mista','dupla','duas acidoses','metabolica e respiratoria'],reject:['simples'],fb:'MISTO — acidose metabólica + acidose respiratória ao mesmo tempo.'},
+  final:{accept:['acidose mista','dupla acidose','mista','metabolica e respiratoria'],partial:['misto'],fb:'Acidose mista (metabólica + respiratória): a compensação anda no sentido errado e as duas se somam.'}},
+ {id:'g6',vals:[['pH','7,40','',''],['PaCO₂','40','',''],['HCO₃','24','','']],
+  pH:{accept:['normal','neutro','7,4'],fb:'pH 7,40 → normal.'},
+  primario:{accept:['nenhum','normal','sem disturbio','equilibrio'],partial:['ausente'],fb:'Valores normais — mas atenção: pH normal pode esconder distúrbio misto. Sempre cheque ânion-gap e clínica.'},
+  comp:{accept:['nenhuma','anion gap','clinica','checar gap'],fb:'pH normal não exclui distúrbio misto — calcule o ânion-gap e correlacione com a clínica.'},
+  misto:{accept:['possivel misto','misto','pode haver','mascarado'],partial:['simples'],fb:'pH normal pode esconder distúrbio misto — confirme pelo ânion-gap.'},
+  final:{accept:['normal','possivel misto','sem disturbio aparente','misto oculto'],partial:['normal'],fb:'Gasometria aparentemente normal; sempre afastar distúrbio misto pelo ânion-gap e pela clínica.'}}
+];
+
+/* ---------- SIMULADO PR2 ---------- */
+const SIMULADO=[
+ {topic:'arr',q:'Mulher, 32 anos, palpitação há 30 min. PAVM prévio, episódios autolimitados. PA 110×70, FC 150. ECG: QRS estreito regular. Massagem do seio carotídeo sem reversão. Medicação de escolha?',
+  ch:['Amiodarona 150 mg IV em 10 min','Metoprolol 5 mg IV lento','Atropina 1 mg IV','Adenosina 6 mg IV'],correct:3,
+  expl:'TSV estável + manobra vagal falha → adenosina 6 mg em bolus rápido (depois 12 mg). Atropina é para bradicardia.'},
+ {topic:'arr',q:'Homem, 78 anos, em PCR. Monitor mostra fibrilação ventricular. Qual a ação recomendada?',
+  ch:['Via aérea avançada primeiro','Compressões + desfibrilação','Choque sincronizado 360 J','Atropina 1 mg IV'],correct:1,
+  expl:'FV é ritmo chocável de parada → RCP de alta qualidade + desfibrilação (NÃO sincronizada). Via aérea não tem prioridade sobre compressões/choque.'},
+ {topic:'arr',q:'Homem, 82 anos, lipotimia. Rebaixado, PA 90×60, FC 36, ECG com BAV de 2º grau Mobitz II. Conduta inicial?',
+  ch:['Apenas observação','Atropina 0,5 mg e alta','Atropina 1 mg IV / avaliar marca-passo','Adenosina 6 mg IV'],correct:2,
+  expl:'Bradicardia instável → atropina 1 mg IV; BAV Mobitz II responde mal à atropina, então avalie marca-passo precoce. Dose é 1 mg (pegadinha do 0,5).'},
+ {topic:'arr',q:'Paciente com FA, hipotensão, edema agudo de pulmão e rebaixamento. Melhor conduta?',
+  ch:['Diltiazem IV','Adenosina 6 mg','Cardioversão elétrica sincronizada','Amiodarona oral'],correct:2,
+  expl:'FA instável (EAP/hipoperfusão/isquemia) → cardioversão elétrica sincronizada imediata (200 J bifásico).'},
+ {topic:'sca',q:'Homem, 58 anos, dor torácica. ECG: supra de ST em DII, DIII e aVF. Parede e artéria mais prováveis?',
+  ch:['Anterior — descendente anterior','Inferior — coronária direita','Lateral — circunflexa','Septal — descendente anterior'],correct:1,
+  expl:'DII/DIII/aVF = parede inferior, irrigada pela coronária direita (que também justifica bradicardia no IAM inferior).'},
+ {topic:'sca',q:'Sobre o IAM com supra de ST (IAMCST), assinale a correta:',
+  ch:['Depende de troponina para iniciar conduta','Trombólise é superior à angioplastia primária','Deve ser identificado em ≤10 min e angioplastia primária é superior','Estatina é contraindicada na fase aguda'],correct:2,
+  expl:'O IAMCST é diagnóstico eletrocardiográfico (≤10 min), não depende de enzima; angioplastia primária é superior ao fibrinolítico; abordagem inclui antiagregação, O₂ se necessário, analgesia e estatina.'},
+ {topic:'sca',q:'Complicações mecânicas do IAM incluem:',
+  ch:['Ruptura de parede livre / tamponamento','Ruptura de músculo papilar / insuficiência mitral','Ruptura do septo / CIV aguda','Todas as anteriores'],correct:3,
+  expl:'As três são complicações mecânicas clássicas, mais frequentes em infartos extensos ou de apresentação tardia.'},
+ {topic:'sep',q:'Critérios do qSOFA (rastreio de sepse) são:',
+  ch:['PA, FC e temperatura','FR ≥22, PAS ≤100 e alteração do estado mental','Lactato, leucócitos e creatinina','Glasgow, diurese e SpO₂'],correct:1,
+  expl:'qSOFA = FR ≥22/min, PAS ≤100 mmHg e alteração do estado mental. qSOFA ≥2 indica alto risco. Sepse formal: infecção + ↑≥2 no SOFA.'},
+ {topic:'sep',q:'Definição de choque séptico:',
+  ch:['Qualquer hipotensão na infecção','Necessidade de vasopressor p/ PAM ≥65 + lactato >2','Lactato >2 isoladamente','qSOFA ≥1'],correct:1,
+  expl:'Choque séptico = hipotensão que requer vasopressor para manter PAM ≥65 mmHg associada a lactato >2 mmol/L apesar da ressuscitação.'},
+ {topic:'sep',q:'Sobre a antibioticoterapia na sepse:',
+  ch:['Aguardar culturas para iniciar','Iniciar idealmente na 1ª hora, direcionada ao foco','Só após o lactato voltar','Apenas se houver febre'],correct:1,
+  expl:'Antibiótico precoce (idealmente na 1ª hora após identificar a sepse), direcionado ao foco. Culturas antes, mas sem atrasar o ATB.'},
+ {topic:'cad',q:'Indicador de MAU prognóstico nas primeiras horas de tratamento da CAD:',
+  ch:['Potássio 6,0 mEq/L','Glicemia capilar 500 mg/dL','Alteração do estado mental','Cetonúria'],correct:2,
+  expl:'A alteração do estado mental indica gravidade. Hiperglicemia, hipercalemia inicial e cetonúria são esperadas na apresentação.'},
+ {topic:'cad',q:'Na CAD, qual a sequência correta de tratamento?',
+  ch:['Insulina → volume → potássio','Volume → checar potássio → insulina','Bicarbonato → insulina → volume','Insulina + bicarbonato simultâneos'],correct:1,
+  expl:'Primeiro VOLUME (NaCl 0,9%), depois conferir/repor K, e só então insulina (0,1 U/kg bolus + 0,1 U/kg/h). Se K <3,3, segura a insulina.'},
+ {topic:'cad',q:'CAD GRAVE é definida por:',
+  ch:['pH 7,28 e HCO₃ 16','pH <7,00 e HCO₃ <10','Glicemia >600','Cetonúria 3+'],correct:1,
+  expl:'Gravidade pelo pH/HCO₃: leve 7,25–7,30 (HCO₃ 15–18); moderada 7,00–7,24 (10–14); grave <7,00 (<10).'},
+ {topic:'queim',q:'Adulto, 70 kg, 2º grau em 27% SCQ. Volume de Parkland nas 24 h e nas primeiras 8 h?',
+  ch:['3.780 mL / 1.890 mL','7.560 mL / 3.780 mL','5.400 mL / 2.700 mL','15.120 mL / 7.560 mL'],correct:1,
+  expl:'Parkland: 4 mL × 70 × 27 = 7.560 mL de Ringer lactato/24 h, metade (3.780 mL) nas primeiras 8 h.'},
+ {topic:'queim',q:'Fator mais associado à mortalidade nas queimaduras térmicas e sua conduta:',
+  ch:['Dor intensa — analgesia','Lesão inalatória — intubação precoce','1º grau extenso — curativo','Hipotermia — aquecimento'],correct:1,
+  expl:'A lesão de via aérea por inalação é dos fatores mais relacionados à mortalidade → intubação precoce na suspeita.'},
+ {topic:'queim',q:'Parâmetro e meta para guiar a reposição volêmica no grande queimado adulto:',
+  ch:['PA sistólica >120','Diurese 0,5 mL/kg/h','FC <80','Lactato <1'],correct:1,
+  expl:'A diurese é o parâmetro: meta 0,5 mL/kg/h em adultos (1 mL/kg/h em crianças). Parkland é só estimativa inicial.'},
+ {topic:'intox',q:'Paciente comatosa, miose, sudorese, fasciculações e broncorreia. Toxíndrome e antídoto?',
+  ch:['Anticolinérgica — fisostigmina','Opioide — naloxona','Colinérgica — atropina','Adrenérgica — betabloqueador'],correct:2,
+  expl:'Síndrome colinérgica (organofosforado/carbamato) → antídoto atropina (+ pralidoxima nos organofosforados).'},
+ {topic:'intox',q:'Associação antídoto–intoxicação INCORRETA:',
+  ch:['Paracetamol — N-acetilcisteína','Benzodiazepínico — flumazenil','Betabloqueador — glucagon','Opioide — atropina'],correct:3,
+  expl:'Opioide → naloxona (não atropina). As demais estão corretas. Metanol/etilenoglicol → fomepizol/etanol; metahemoglobinemia → azul de metileno.'},
+ {topic:'abd',q:'Idoso com FA sem anticoagulação, dor abdominal intensa DESPROPORCIONAL ao exame. Hipótese e imagem?',
+  ch:['Apendicite — USG','Isquemia mesentérica — angiotomografia','Diverticulite — colonoscopia','Pancreatite — RX simples'],correct:1,
+  expl:'Dor desproporcional + fonte embólica (FA) = isquemia mesentérica (abdome agudo vascular); imagem de escolha é a TC/angiotomografia.'},
+ {topic:'abd',q:'Sobre analgesia na dor abdominal aguda no DE:',
+  ch:['Deve ser evitada para não mascarar o quadro','Pode ser feita; não analgesar por esse receio é má prática','Só após a cirurgia','Apenas anti-inflamatórios'],correct:1,
+  expl:'O livro é explícito: deixar de analgesar por receio de ocultar sintomas é considerado má prática médica.'}
+];
+</script>
+<script id="content2done"></script>
+<script id="teaching">
+/* ============================================================
+   CAMADA PRECEPTOR — conteúdo didático (fiel ao livro USP/HC-FMUSP)
+   Estrutura por resposta: reconhecer · pensar · pegadinha · decore
+   Botões: simples · preceptor · erro
+   TEACH[caseId] = [ {q1}, {q2}, ... ] na ordem das perguntas do caso
+   ============================================================ */
+const TEACH={
+ tsv1:[
+  {reconhecer:`QRS estreito (<120 ms), ritmo regular, frequência muito alta (~180–200) e sem onda P visível antes do QRS. A regularidade é o que separa de uma FA.`,
+   pensar:[`Primeiro: o QRS é estreito ou largo? Estreito → origem supraventricular.`,`Depois: regular ou irregular? Regular + sem P → TSV (reentrada nodal). Irregular pesaria a favor de FA.`],
+   pegadinha:`Confundir com FA de alta resposta. A FA é irregularmente irregular; a TSV é metronômica. Meça três intervalos R-R — na TSV são iguais.`,
+   decore:[`QRS estreito + regular + sem P = TSV`,`FA = irregularmente irregular`],
+   simples:`O coração disparou numa batida rápida e certinha, como um motor acelerado em rotação constante. Não é a bagunça da fibrilação: é rápido, mas organizado.`,
+   preceptor:`Antes do nome, descreva o traçado — largura do QRS, regularidade e onda P. O diagnóstico cai sozinho.`,
+   erro:`Cravar FA só porque está taquicárdico. Se é regular, não é FA.`},
+  {reconhecer:`Procure os 4 sinais de instabilidade: hipotensão, alteração do nível de consciência, dor torácica isquêmica e sinais de choque/IC aguda. Ele não tem nenhum.`,
+   pensar:[`A pergunta não é "qual arritmia?", e sim "o paciente aguenta?".`,`Sem hipotensão, sem rebaixamento, sem dor isquêmica, sem choque → estável → há tempo para droga.`],
+   pegadinha:`FC muito alta não é, sozinha, instabilidade. Quem define é a repercussão clínica, não o número no monitor.`,
+   decore:[`Instabilidade = hipotensão, rebaixamento, dor isquêmica ou choque`,`Estável → droga; instável → choque elétrico`],
+   simples:`Pergunte: o paciente está passando mal de verdade — desmaiando, com a pressão no chão? Se não, dá para tentar remédio com calma.`,
+   preceptor:`Estabilidade é a primeira bifurcação de toda taqui/bradiarritmia. Decida isso antes de qualquer droga.`,
+   erro:`Tratar o número (FC 190) e esquecer de olhar o paciente.`},
+  {reconhecer:`TSV estável que já falhou à manobra vagal → a próxima etapa é o agente químico que freia o nó AV.`,
+   pensar:[`Vagal primeiro (aumenta o tônus vagal e freia o nó AV).`,`Falhou? Adenosina 6 mg em bolus RÁPIDO + flush de SF. Sem reverter → 12 mg.`,`Sem resposta/contraindicação → bloqueador de canal de cálcio (diltiazem/verapamil) ou betabloqueador.`],
+   pegadinha:`Infundir adenosina devagar. A meia-vida é de segundos: se não for bolus rápido com flush, ela não chega ao coração e "não funciona".`,
+   decore:[`TSV estável: vagal → adenosina 6 → 12 mg`,`Bolus RÁPIDO + flush de soro`,`Instabilizou → cardioversão sincronizada`],
+   simples:`A adenosina dá um soluço de poucos segundos no coração para ele reiniciar no ritmo certo. Só funciona se entrar de uma vez e for empurrada com soro — senão some no caminho.`,
+   preceptor:`Adenosina é técnica: bolus rápido, flush e avise o paciente da sensação estranha no peito. Dose certa com técnica errada vira falso fracasso.`,
+   erro:`Cardioverter um paciente estável de cara, ou dar adenosina lenta.`}
+ ],
+ fa1:[
+  {reconhecer:`Ritmo irregularmente irregular + ausência de onda P, com linha de base ondulada (ondas f) no lugar das P.`,
+   pensar:[`QRS estreito? Sim.`,`Regular ou irregular? Irregularmente irregular e sem P → FA.`],
+   pegadinha:`Flutter com condução variável também é irregular, mas tem ondas F em dente de serra. A FA não tem atividade atrial organizada.`,
+   decore:[`FA = irregularmente irregular + sem onda P`,`Flutter = dente de serra`],
+   simples:`Os átrios estão tremendo sem ritmo nenhum, então os batimentos chegam embaralhados, sem espaçamento fixo.`,
+   preceptor:`A irregularidade da irregularidade é a assinatura da FA. Meça três R-R: se nenhum é igual, é FA.`,
+   erro:`Chamar de FA toda taquicardia rápida sem checar a regularidade.`},
+  {reconhecer:`Hipotensão (82/50) + edema agudo de pulmão (crepitações, SpO₂ baixa) + rebaixamento. É a tríade que muda toda a conduta.`,
+   pensar:[`Tem instabilidade? Hipotensão + EAP + confusão → sim.`,`A arritmia é a causa da instabilidade? Então resolver a arritmia AGORA, no elétrico.`],
+   pegadinha:`Atribuir a hipotensão a outra causa e perder tempo com controle de frequência. Aqui a FA rápida É o motor da descompensação.`,
+   decore:[`FA instável (hipotensão/EAP/isquemia/hipoperfusão) → cardioversão`],
+   simples:`Ela está se afogando por dentro (pulmão cheio de líquido) e com a pressão no chão. Não é hora de remédio devagar — é hora de resetar o coração com choque.`,
+   preceptor:`Quando a arritmia derruba o paciente, o eletrodo resolve mais rápido que qualquer ampola.`,
+   erro:`Esquecer de avaliar estabilidade e ir direto para diltiazem/betabloqueador.`},
+  {reconhecer:`FA + instabilidade → cardioversão elétrica SINCRONIZADA imediata (no livro, 200 J bifásico).`,
+   pensar:[`Instável → elétrico.`,`Tem QRS organizado (não é FV)? Sim → SINCRONIZAR o choque com o QRS.`,`Sedar antes, se a condição permitir.`],
+   pegadinha:`Choque NÃO sincronizado num ritmo com QRS pode cair na onda T e induzir FV. Na FA, sempre sincronizado.`,
+   decore:[`FA instável → cardioversão sincronizada 200 J (bifásico)`,`Sincronizada = casa o choque com o QRS`],
+   simples:`O choque precisa ser dado no momento certo da batida. Na hora errada, pode transformar uma arritmia ruim numa fatal.`,
+   preceptor:`Aperte SYNC antes de carregar. É o detalhe que separa cardioversão de desfibrilação.`,
+   erro:`Esquecer de sincronizar, ou insistir em droga num paciente que está descompensando.`}
+ ],
+ tv1:[
+  {reconhecer:`Taquicardia de QRS LARGO (>120 ms), regular e monomórfico, em paciente com cardiopatia prévia (IAM antigo).`,
+   pensar:[`QRS largo? Sim.`,`História de cardiopatia? Sim → na emergência, trate como TV até prova em contrário (é mais seguro).`],
+   pegadinha:`Tentar diferenciar TV de TSV com aberrância no paciente instável. Não há tempo nem necessidade: QRS largo + cardiopatia = trate como TV.`,
+   decore:[`QRS largo + cardiopatia prévia → assuma TV`,`QRS >200 ms muito bizarro → pense causa tóxico-metabólica (ex.: hipercalemia)`],
+   simples:`O coração está disparando lá de baixo (ventrículo), por isso a batida no traçado é "gorda" e larga. Em quem já infartou, presuma o pior.`,
+   preceptor:`Diante de QRS largo, a aposta segura é TV. Errar para o lado da TV protege o paciente.`,
+   erro:`Dar adenosina numa TV achando que é TSV aberrante.`},
+  {reconhecer:`TV COM pulso + instável (hipotensão, dor, pré-síncope) → cardioversão sincronizada.`,
+   pensar:[`Tem pulso? Sim.`,`Instável? Sim → cardioversão SINCRONIZADA.`,`Se perdesse o pulso, viraria ritmo de parada → desfibrilação + RCP.`],
+   pegadinha:`Confundir cardioversão (com pulso, sincronizada) com desfibrilação (sem pulso, não sincronizada).`,
+   decore:[`TV com pulso + instável → cardioversão sincronizada`,`TV/FV SEM pulso → desfibrilação + RCP`,`TV com pulso + estável → amiodarona`],
+   simples:`Se ainda tem pulso, o choque é no compasso (sincronizado). Se o coração parou de bombear, aí é o choque forte da parada.`,
+   preceptor:`O pulso é que define se você sincroniza. Sempre cheque o pulso antes de escolher o tipo de choque.`,
+   erro:`Desfibrilar (sem sincronizar) um paciente que ainda tem pulso.`}
+ ],
+ brady1:[
+  {reconhecer:`Bradicardia com dissociação AV: ondas P numa frequência e QRS em outra, independentes (P andando por cima dos QRS, sem relação fixa).`,
+   pensar:[`As P têm relação fixa com os QRS? Não → dissociação AV.`,`Dissociação completa + QRS de escape lento → BAV de 3º grau (total).`],
+   pegadinha:`Confundir com BAV de 2º grau. No total, NENHUMA P conduz; o PR sequer é mensurável, porque P e QRS são independentes.`,
+   decore:[`BAV total = P e QRS independentes (dissociação AV)`,`Mobitz I = PR aumenta até cair; Mobitz II = PR fixo e cai súbito`],
+   simples:`O fio que liga o andar de cima (átrio) ao de baixo (ventrículo) se rompeu. Cada um bate no seu ritmo, sem conversar.`,
+   preceptor:`Marque as P e marque os QRS separadamente. Se marcham sem sincronia, é bloqueio total.`,
+   erro:`Chamar de bradicardia sinusal e só observar, perdendo a indicação de marca-passo.`},
+  {reconhecer:`Bradicardia instável → primeira droga é atropina 1 mg IV; em BAV avançado responde mal → preparar marca-passo.`,
+   pensar:[`Instável? Sim → atropina 1 mg IV.`,`O bloqueio é infranodal (BAV 2º Mobitz II / total)? A atropina costuma falhar → marca-passo transcutâneo (ou dopamina/adrenalina) sem demora.`,`Definitivo: marca-passo transvenoso.`],
+   pegadinha:`A dose: na bradicardia instável é 1 mg (não 0,5 mg). E não fique insistindo na atropina num bloqueio infranodal.`,
+   decore:[`Bradi instável: atropina 1 mg IV`,`BAV avançado/total → marca-passo (atropina costuma falhar)`],
+   simples:`Primeiro um empurrãozinho químico (atropina) para acelerar. Se o bloqueio é lá embaixo, o empurrão não pega — aí entra o marca-passo, que bate pelo coração.`,
+   preceptor:`Em bloqueio infranodal, não namore a atropina: prepare o marca-passo em paralelo.`,
+   erro:`Usar atropina 0,5 mg (dose de teste, não de emergência) ou atrasar o marca-passo.`}
+ ],
+ stemi1:[
+  {reconhecer:`Supra de ST em DII, DIII e aVF (derivações que enxergam a parede inferior), com infra em espelho em aVL.`,
+   pensar:[`Onde está o supra? DII, DIII, aVF.`,`Qual parede essas derivações enxergam? Inferior.`,`Há imagem em espelho (infra) confirmando? Sim, em aVL.`],
+   pegadinha:`Confundir inferior com lateral. O aVF ancora a parede inferior; lateral seria DI, aVL, V5–V6.`,
+   decore:[`DII, DIII, aVF → parede inferior`,`Espelho da inferior aparece em DI/aVL`],
+   simples:`Cada par de "olhos" do ECG observa um lado do coração. DII, DIII e aVF olham por baixo — então o problema está na parede de baixo.`,
+   preceptor:`Decore os grupos de derivações por parede; metade dos erros de IAM é de localização, não de diagnóstico.`,
+   erro:`Ver o supra e não localizar a parede — perde a artéria e a antecipação das complicações.`},
+  {reconhecer:`Parede inferior → na maioria, coronária direita (CD).`,
+   pensar:[`Qual parede? Inferior.`,`Qual artéria irriga a inferior? Coronária direita.`,`Por isso bradicardia/BAV e hipotensão são comuns aqui (o nó AV costuma ser irrigado pela CD).`],
+   pegadinha:`Em IAM inferior, cuidado com acometimento do VD e com nitrato (pode derrubar a pressão). Não é a DA — essa é anterior/septal.`,
+   decore:[`Inferior → coronária direita`,`Anterior/septal → descendente anterior`,`Lateral → circunflexa`],
+   simples:`A parede de baixo costuma ser alimentada pela artéria do lado direito. Como essa artéria também cuida do marca-passo natural, o paciente pode ficar lento e hipotenso.`,
+   preceptor:`IAM inferior pede cautela com nitrato e atenção ao ventrículo direito. A artéria culpada já avisa as armadilhas.`,
+   erro:`Liberar nitrato à vontade no IAM inferior com VD e derrubar a pressão.`},
+  {reconhecer:`IAMCST = reperfusão. Angioplastia primária é superior ao fibrinolítico. O ECG deve sair em ≤10 min.`,
+   pensar:[`Tem supra? Sim → IAMCST.`,`O diagnóstico é do ECG, não da enzima → não espere troponina.`,`Reperfusão: angioplastia primária (preferida) ou fibrinolítico (alvo: iniciar em 30 min) se ATC indisponível.`],
+   pegadinha:`Esperar a troponina voltar para "confirmar" antes de reperfundir. O IAMCST é diagnóstico eletrocardiográfico.`,
+   decore:[`IAMCST → ECG ≤10 min → reperfusão`,`Angioplastia primária > fibrinólise`,`AAS sempre (salvo alergia verdadeira ou suspeita de dissecção)`],
+   simples:`A artéria está entupida e o músculo, morrendo. Cada minuto conta: abra a artéria (de preferência por cateterismo) o mais rápido possível. Não espere exame de sangue.`,
+   preceptor:`Tempo é músculo. No supra, o relógio começa no ECG, não no laboratório.`,
+   erro:`Esperar troponina para reperfundir o supra.`}
+ ],
+ sepse1:[
+  {reconhecer:`Infecção presumida (foco pulmonar: tosse, febre, crepitações) + disfunção orgânica (hipotensão, confusão, taquipneia).`,
+   pensar:[`Há infecção? Sim, pulmonar.`,`Há disfunção orgânica? Sim → é sepse, não "pneumonia simples".`],
+   pegadinha:`Parar em "pneumonia" e não nomear a sepse — é o nome que dispara a urgência do tratamento.`,
+   decore:[`Sepse = infecção + disfunção orgânica (↑≥2 no SOFA)`,`Foco mais comum = pulmão`],
+   simples:`Não é só uma infecção no pulmão: a resposta do corpo descontrolou e começou a desligar outros órgãos.`,
+   preceptor:`Nomeie a sepse explicitamente — o nome liga o relógio do antibiótico.`,
+   erro:`Tratar como pneumonia de enfermaria e subestimar a gravidade.`},
+  {reconhecer:`qSOFA: FR ≥22, PAS ≤100 e alteração do estado mental. Ele pontua nos três (=3).`,
+   pensar:[`Conte os 3 itens do qSOFA.`,`qSOFA ≥2 = alto risco → aja como sepse grave.`,`Diagnóstico formal: infecção + ↑≥2 no SOFA.`],
+   pegadinha:`Confundir qSOFA (rastreio de cabeceira) com o SOFA completo (laboratorial). O qSOFA não usa lactato nem leucócitos.`,
+   decore:[`qSOFA = FR≥22 + PAS≤100 + estado mental alterado`,`qSOFA ≥2 → alto risco`],
+   simples:`Três perguntas rápidas, sem exame: respira rápido? pressão baixa? confuso? Dois "sim" já acendem o sinal vermelho.`,
+   preceptor:`qSOFA serve para disparar a ação à beira do leito, não para fechar o diagnóstico.`,
+   erro:`Esperar exames para "pontuar" enquanto o paciente piora.`},
+  {reconhecer:`Hipotensão que exige vasopressor para PAM ≥65 + lactato >2 mmol/L apesar do volume = choque séptico.`,
+   pensar:[`Hipotenso após volume? Sim.`,`Vai precisar de vasopressor e o lactato está alto? Sim → choque séptico (a forma mais grave).`],
+   pegadinha:`Chamar de choque séptico qualquer hipotensão na infecção. Precisa de vasopressor + lactato >2 após a ressuscitação.`,
+   decore:[`Choque séptico = vasopressor p/ PAM≥65 + lactato >2`,`Alvo de PAM ≥65`],
+   simples:`Mesmo depois de encher de soro, a pressão não sobe e o lactato (sinal de sofrimento dos tecidos) está alto. É o degrau mais grave da sepse.`,
+   preceptor:`Choque séptico tem definição precisa — vasopressor + lactato. Não use o termo de forma frouxa.`,
+   erro:`Rotular cedo demais ou tarde demais: os dois atrapalham a conduta.`},
+  {reconhecer:`Pilares: lactato (perfusão), culturas/hemoculturas ANTES do antibiótico, gasometria, hemograma e marcadores de disfunção orgânica.`,
+   pensar:[`O que guia a ressuscitação? O lactato.`,`O que guia o foco e o antibiótico? As culturas (antes do ATB, sem atrasá-lo).`],
+   pegadinha:`Atrasar o antibiótico esperando colher todas as culturas. Colha o que der rápido, mas o ATB não espera.`,
+   decore:[`Lactato + culturas antes do antibiótico`,`Nunca atrasar o antibiótico pelas culturas`],
+   simples:`Tire sangue para medir o quanto o corpo sofre (lactato) e para achar o germe (culturas) — mas o remédio não espera o laboratório.`,
+   preceptor:`Culturas antes do ATB é o ideal; ATB no tempo é inegociável. Se conflitar, o tempo vence.`,
+   erro:`Segurar o antibiótico por causa de exames.`},
+  {reconhecer:`Cristaloide balanceado (Ringer lactato) ~30 mL/kg nas primeiras 3 h em bólus reavaliados + antibiótico na 1ª hora + noradrenalina se PAM<65.`,
+   pensar:[`1) Volume em bólus, reavaliando à beira do leito.`,`2) Antibiótico precoce, direcionado ao foco.`,`3) Persistiu hipotenso? Noradrenalina para PAM ≥65.`],
+   pegadinha:`Tratar os 30 mL/kg como dogma de infusão cega. O livro manda dar em bólus e REAVALIAR — o volume é individualizado.`,
+   decore:[`Volume 30 mL/kg/3h em bólus reavaliados`,`Antibiótico na 1ª hora`,`Noradrenalina = 1º vasopressor (PAM≥65)`],
+   simples:`Os vasos estão largos e perdendo pressão. Primeiro a gente enche com soro; se ainda não sustenta, a noradrenalina aperta os vasos de novo.`,
+   preceptor:`Volume, antibiótico e vasopressor — nessa ordem de urgência. E o antibiótico é o que mais salva.`,
+   erro:`Atrasar o antibiótico (o erro que mais mata na sepse).`}
+ ],
+ cad1:[
+  {reconhecer:`Glicemia >250 + acidose metabólica (pH<7,3) + cetonemia. Gravidade pelo pH/HCO₃: pH 6,98 e HCO₃ 7 → grave.`,
+   pensar:[`Tríade presente? Hiperglicemia + acidose + cetona → CAD.`,`pH/HCO₃? <7,00 e <10 → grave.`],
+   pegadinha:`Classificar a gravidade pela glicemia. Não é a glicose que define — é o pH/HCO₃ (e o estado mental).`,
+   decore:[`CAD = glicemia >250 + pH<7,3 + cetonemia`,`Grave: pH<7,00 / HCO₃<10`],
+   simples:`Sem insulina, o corpo queima gordura e fabrica ácido (cetona). O sangue azeda. O quanto azedou (pH) diz a gravidade — não o quão alta está a glicose.`,
+   preceptor:`A glicemia abre o diagnóstico; o pH define a gravidade. Não troque os papéis.`,
+   erro:`Achar que "glicemia 600" é mais grave que "pH 6,9".`},
+  {reconhecer:`Paciente desidratado por dias de glicosúria → a reposição volêmica é a PRIMEIRA medida (NaCl 0,9% em bólus).`,
+   pensar:[`O que está mais ameaçador agora? A hipovolemia/desidratação.`,`Primeiro volume; insulina só depois, e com o potássio conferido.`],
+   pegadinha:`Começar pela insulina. Dar insulina antes do volume piora a perfusão e desloca o potássio bruscamente.`,
+   decore:[`Sequência: 1) Volume → 2) Potássio → 3) Insulina`],
+   simples:`Ele passou dias urinando glicose e perdendo água; chega seco. Se você der insulina antes de repor líquido, pode piorar tudo. Por isso: primeiro soro.`,
+   preceptor:`Na CAD, soro antes de insulina. Sempre.`,
+   erro:`Começar insulina antes da hidratação (o erro que mais reprova na CAD).`},
+  {reconhecer:`Regra do potássio: <3,3 → repor K ANTES da insulina; 3,3–5,0 → 25 mEq por litro de solução; >5,0 → só repor quando cair <5.`,
+   pensar:[`Qual o K? Se <3,3 → segure a insulina e reponha potássio.`,`Por quê? A insulina joga o K para dentro da célula → hipocalemia grave e arritmia.`],
+   pegadinha:`Ver K "normal/alto" e relaxar. O potássio corporal total está baixo e vai despencar com a insulina.`,
+   decore:[`K <3,3 → repor antes da insulina`,`Insulina baixa o K (desloca para dentro da célula)`],
+   simples:`A insulina empurra o potássio para dentro das células. Se ele já estiver baixo, isso pode parar o coração. Por isso conferimos e repomos antes.`,
+   preceptor:`Nunca ligue a insulina sem antes olhar o potássio.`,
+   erro:`Iniciar insulina com K <3,3.`},
+  {reconhecer:`Insulina regular IV: ~0,1 U/kg em bolus + 0,1 U/kg/h em infusão (ou 0,14 U/kg/h sem bolus).`,
+   pensar:[`Volume feito e potássio ok? Então insulina 0,1 U/kg/h.`,`Glicemia caiu <250? Adicione SG 5% e mantenha a insulina para fechar a cetose.`],
+   pegadinha:`Desligar a insulina quando a glicose normaliza. A insulina fecha a CETOSE; mantém-se com soro glicosado até a acidose resolver.`,
+   decore:[`Insulina 0,1 U/kg/h`,`Glicemia <250 → entra SG 5%, insulina continua`],
+   simples:`A insulina é o que apaga o incêndio de ácido. Quando a glicose cai, damos açúcar junto (soro glicosado) para poder manter a insulina até o ácido sumir.`,
+   preceptor:`A meta da insulina é a cetose, não só a glicemia. Por isso ela não para quando a glicose cai.`,
+   erro:`Parar a insulina cedo demais e deixar a cetose voltar.`}
+ ],
+ intox1:[
+  {reconhecer:`Miose + sudorese + fasciculações + broncorreia + bradicardia + hipersecreção (SLUDGE/DUMBELS) = síndrome colinérgica.`,
+   pensar:[`Pupila? Miótica.`,`Secreções? Aumentadas (broncorreia, sialorreia, lacrimejamento).`,`Tudo molhado + miose → colinérgico.`],
+   pegadinha:`Confundir com anticolinérgico, que é o OPOSTO: midríase, pele seca e quente, retenção urinária (seco como osso).`,
+   decore:[`Colinérgico = miose + secreções (tudo molhado)`,`Anticolinérgico = midríase + seco`],
+   simples:`O corpo está encharcado: pupila pequena, baba, lágrima, secreção no pulmão. É excesso do sinal que manda o corpo secretar.`,
+   preceptor:`Pupila + secreções resolvem a maioria das toxíndromes na prova. Olhe os olhos e as glândulas.`,
+   erro:`Trocar colinérgico por anticolinérgico (e inverter o antídoto).`},
+  {reconhecer:`Toxíndrome colinérgica → inibidor da acetilcolinesterase: organofosforado/carbamato (inseticidas, "chumbinho").`,
+   pensar:[`A síndrome colinérgica vem de quê? Acúmulo de acetilcolina → inibidor de colinesterase.`,`O contexto (tentativa de autoextermínio, agrotóxico) reforça.`],
+   pegadinha:`Carbamato dá quadro parecido, porém costuma ser mais curto e a pralidoxima tem papel menor.`,
+   decore:[`Colinérgico → organofosforado/carbamato`,`Mecanismo: inibe a acetilcolinesterase`],
+   simples:`O veneno trava o freio que desliga o sinal nervoso. Sem freio, o corpo secreta sem parar. Esse veneno costuma ser inseticida.`,
+   preceptor:`Ligue a toxíndrome ao mecanismo: colinérgico = sobra de acetilcolina = inibidor de colinesterase.`,
+   erro:`Não reconhecer o contexto de intoxicação por agrotóxico.`},
+  {reconhecer:`Estabilizar (via aérea/O₂ — a broncorreia ameaça) + descontaminar (remover roupas, lavar a pele) + antídoto.`,
+   pensar:[`ABC primeiro: broncorreia e bradicardia matam.`,`A pele e a roupa continuam expondo → descontaminar.`,`Depois, o antídoto.`],
+   pegadinha:`Esquecer a proteção da equipe e a descontaminação — o paciente segue absorvendo veneno pela pele.`,
+   decore:[`ABC → descontaminação → antídoto`,`Via aérea: a broncorreia é a ameaça imediata`],
+   simples:`Primeiro garantir que ele respira; depois tirar a roupa e lavar para parar de absorver veneno; só então o antídoto.`,
+   preceptor:`Estabilizar e descontaminar vêm antes do antídoto, sempre.`,
+   erro:`Ir direto ao antídoto e esquecer a via aérea/descontaminação.`},
+  {reconhecer:`Atropina (antagoniza os efeitos muscarínicos, titulada pela secreção respiratória) + pralidoxima (reativa a colinesterase nos organofosforados).`,
+   pensar:[`Excesso colinérgico → bloquear o muscarínico → atropina.`,`Organofosforado → somar pralidoxima.`,`Titular a atropina pela secreção pulmonar, não pela pupila ou FC.`],
+   pegadinha:`A tabela de antídotos: opioide→naloxona; BZD→flumazenil (uso restrito); paracetamol→NAC; betabloqueador→glucagon; metanol/etilenoglicol→fomepizol/etanol; metahemoglobinemia→azul de metileno; digoxina→anticorpo anti-digoxina (FAB).`,
+   decore:[`Organofosforado → atropina + pralidoxima`,`Titular a atropina pela broncorreia`],
+   simples:`A atropina seca as secreções e protege o pulmão; a pralidoxima conserta o freio que o veneno travou.`,
+   preceptor:`Atropinize até secar o pulmão — a meta da atropina é a secreção respiratória.`,
+   erro:`Dosar a atropina pela frequência cardíaca e deixar o pulmão encharcado.`}
+ ],
+ queim1:[
+  {reconhecer:`Fuligem perinasal + rouquidão + estridor + escarro carbonáceo → lesão inalatória → via aérea precoce.`,
+   pensar:[`Antes de qualquer cálculo: a via aérea está ameaçada?`,`Sinais de inalação? Sim → intubar PRECOCE, antes de o edema fechar a via.`],
+   pegadinha:`Focar no volume (Parkland) e esquecer a via aérea. O edema pode fechar a via aérea em poucas horas.`,
+   decore:[`Lesão inalatória = maior preditor de mortalidade`,`Sinais de inalação → intubação precoce`],
+   simples:`Ele respirou fumaça quente. A garganta vai inchar e fechar. Melhor colocar o tubo agora, com calma, do que correr atrás depois.`,
+   preceptor:`Na queimadura, a via aérea decide antes do volume. Inalou fumaça = intube cedo.`,
+   erro:`Adiar a intubação numa lesão inalatória até a via aérea fechar.`},
+  {reconhecer:`Regra dos Nove: tronco anterior 18% + todo o membro superior 9% = 27%. Não conta o 1º grau.`,
+   pensar:[`Some as áreas em múltiplos de 9.`,`Tronco anterior = 18; membro superior inteiro = 9 → 27%.`,`Exclua a queimadura de 1º grau.`],
+   pegadinha:`Incluir o eritema de 1º grau na conta — isso superestima o volume.`,
+   decore:[`Cabeça 9 · cada braço 9 · tronco ant. 18 · dorso 18 · cada perna 18 · genitália 1`,`1º grau NÃO entra na SCQ`],
+   simples:`O corpo é dividido em fatias de 9%. Some só o que tem bolha ou pior — vermelhidão simples não conta.`,
+   preceptor:`A SCQ guia o volume; contar o 1º grau infla a conta e a hidratação.`,
+   erro:`Contar o 1º grau na SCQ.`},
+  {reconhecer:`Parkland: 4 mL × peso(kg) × %SCQ = 4×70×27 = 7.560 mL de Ringer lactato em 24 h; metade (3.780 mL) nas primeiras 8 h.`,
+   pensar:[`Volume de 24 h = 4 × peso × SCQ.`,`Metade nas primeiras 8 h, metade nas 16 h seguintes.`,`Solução: Ringer lactato.`],
+   pegadinha:`Contar as 8 horas a partir da chegada ao hospital. O relógio começa no momento da QUEIMADURA.`,
+   decore:[`Parkland: 4 mL × kg × %SCQ`,`½ nas primeiras 8 h (do trauma), ½ nas 16 h seguintes`,`Ringer lactato`],
+   simples:`Existe uma conta simples para estimar quanto soro dar no primeiro dia: 4 × peso × % queimada. Metade vai mais rápido, nas 8 primeiras horas.`,
+   preceptor:`Parkland é só o ponto de partida; e as 8 horas contam do acidente, não da porta do hospital.`,
+   erro:`Iniciar a contagem das 8 h na admissão, e não na hora da queimadura.`},
+  {reconhecer:`A diurese guia a reposição: meta de 0,5 mL/kg/h no adulto (1 mL/kg/h em crianças).`,
+   pensar:[`Parkland é estimativa; o que manda é a resposta do paciente.`,`Qual parâmetro? A diurese.`,`Titular o volume para manter a diurese-alvo.`],
+   pegadinha:`Seguir o número de Parkland "cego" e ignorar a diurese — pode hiper ou hipo-hidratar.`,
+   decore:[`Diurese-alvo adulto: 0,5 mL/kg/h`,`Parkland = estimativa; a urina manda`],
+   simples:`A conta dá um chute inicial. Quem diz se está certo é o xixi: se o rim faz urina suficiente, a hidratação está boa.`,
+   preceptor:`Trate o paciente, não a fórmula: a diurese é o termômetro da ressuscitação.`,
+   erro:`Seguir Parkland ao pé da letra e ignorar a diurese.`}
+ ],
+ abd1:[
+  {reconhecer:`Dor intensa DESPROPORCIONAL ao exame físico + fonte embólica (FA sem anticoagulação) + idoso → isquemia mesentérica (abdome agudo vascular).`,
+   pensar:[`A dor é muito maior que os achados ao exame? Red flag de isquemia.`,`Há fonte de êmbolo? FA sem anticoagulação → embolia mesentérica.`],
+   pegadinha:`Subestimar pelo abdome "inocente" à palpação. No início, a isquemia dói muito e examina pouco.`,
+   decore:[`Dor desproporcional ao exame = isquemia mesentérica`,`FA sem anticoagulação = fonte embólica`],
+   simples:`Ele sente uma dor enorme, mas a barriga quase não dói ao toque. Esse descompasso é o aviso de que o intestino está sem sangue.`,
+   preceptor:`Dor desproporcional ao exame no idoso com FA é isquemia mesentérica até prova em contrário.`,
+   erro:`Mandar para casa porque "o abdome está mole".`},
+  {reconhecer:`Suspeita vascular → angiotomografia (TC). A USG é melhor para o andar superior do abdome.`,
+   pensar:[`A imagem segue a hipótese.`,`Vascular/inflamatória/renal → TC (angioTC).`,`Vesícula e vias biliares (andar superior) → USG.`],
+   pegadinha:`Pedir USG para tudo. Para isquemia mesentérica, a angioTC é o exame que fecha.`,
+   decore:[`Vascular/inflamatória/renal → TC/angioTC`,`Andar superior (biliar) → USG`],
+   simples:`Para ver se a artéria do intestino entupiu, a tomografia com contraste é a melhor foto. O ultrassom é melhor para a vesícula.`,
+   preceptor:`Escolha a imagem pela hipótese, não por reflexo. Suspeita vascular = angioTC.`,
+   erro:`Insistir em USG quando a suspeita é vascular.`},
+  {reconhecer:`Analgesar é correto; NÃO analgesar por medo de "mascarar" é considerado má prática. Acionar a cirurgia.`,
+   pensar:[`A analgesia atrapalha o diagnóstico? A evidência diz que não.`,`Logo: analgese, monitorize e chame o cirurgião — tempo é intestino.`],
+   pegadinha:`O mito de "não dar analgésico para não mascarar". O livro classifica isso como má prática médica.`,
+   decore:[`Pode e deve analgesar a dor abdominal aguda`,`Não analgesar "para não mascarar" = má prática`],
+   simples:`Antigamente se evitava remédio para dor para não esconder a doença. Hoje sabemos que isso só faz o paciente sofrer à toa — dá para aliviar a dor e investigar ao mesmo tempo.`,
+   preceptor:`Alivie a dor e investigue em paralelo. Sofrimento não é ferramenta diagnóstica.`,
+   erro:`Deixar o paciente sem analgesia "para não mascarar".`}
+ ]
+};
+
+/* fluxograma mental por caso (🧠 Como pensar na prova) */
+const FLUXO={
+ tsv1:[`Palpitação súbita`,`QRS estreito + regular + sem P`,`TSV`,`Estável ou instável?`,`Estável → manobra vagal`,`Falhou → adenosina 6 → 12 mg`],
+ fa1:[`Palpitação + dispneia`,`Irregularmente irregular, sem P`,`FA`,`Tem instabilidade? (hipotensão/EAP/isquemia)`,`Sim → cardioversão sincronizada 200 J`],
+ tv1:[`QRS largo + cardiopatia prévia`,`Trate como TV`,`Tem pulso?`,`Com pulso + instável → cardioversão sincronizada`,`Sem pulso → desfibrilação + RCP`],
+ brady1:[`Bradicardia + dissociação AV`,`BAV total`,`Instável?`,`Sim → atropina 1 mg`,`Infranodal/refratário → marca-passo`],
+ stemi1:[`Dor torácica`,`ECG em ≤10 min`,`Existe supra?`,`Sim → IAMCST`,`Qual parede? (DII/DIII/aVF = inferior)`,`Qual artéria? (coronária direita)`,`Reperfusão (angioplastia primária)`],
+ sepse1:[`Infecção + disfunção orgânica`,`Sepse (qSOFA ≥2 rastreia)`,`Hipotensão após volume + lactato >2?`,`Sim → choque séptico`,`Volume 30 mL/kg + ATB 1ª hora + noradrenalina`],
+ cad1:[`Hiperglicemia + acidose + cetona`,`CAD (gravidade pelo pH)`,`1) Volume (NaCl 0,9%)`,`2) Potássio (regra do 3,3)`,`3) Insulina 0,1 U/kg/h`,`Glicemia <250 → SG 5%`],
+ intox1:[`Miose + secreções + fasciculações`,`Toxíndrome colinérgica`,`Organofosforado/carbamato`,`ABC + descontaminação`,`Atropina (titular pela secreção) + pralidoxima`],
+ queim1:[`Queimadura + fumaça`,`Via aérea ameaçada? → intubar cedo`,`SCQ pela Regra dos Nove (sem 1º grau)`,`Parkland 4 × kg × SCQ (Ringer)`,`½ nas primeiras 8 h`,`Titular pela diurese (0,5 mL/kg/h)`],
+ abd1:[`Dor desproporcional ao exame`,`Idoso + FA → fonte embólica`,`Isquemia mesentérica (vascular)`,`AngioTC`,`Analgesia + cirurgia precoce`]
+};
+
+/* teaching dos ECG (um por traçado) */
+const TEACH_ECG={
+ e_sinus:{reconhecer:`Onda P antes de cada QRS, relação P-QRS fixa, FC 60–100, regular.`,
+  pensar:[`Tem P antes de cada QRS? Sim.`,`FC entre 60–100? Sim → ritmo sinusal normal.`],
+  pegadinha:`Chamar de "normal" sem checar a relação P-QRS.`,decore:[`Sinusal = P antes de cada QRS, FC 60–100`],
+  simples:`Cada batida é puxada por uma ondinha P, no ritmo certo. Coração funcionando como deve.`,
+  preceptor:`Ache a onda P primeiro — ela ancora toda a leitura do ritmo.`,erro:`Pular a onda P e ler só a frequência.`},
+ e_fa:{reconhecer:`Irregularmente irregular + ausência de onda P.`,
+  pensar:[`R-R todos diferentes? Sim.`,`Sem P organizada? Sim → FA.`],
+  pegadinha:`Confundir com flutter (dente de serra) ou TSV (regular).`,decore:[`FA = irregular + sem P`,`Estável → controle de FC; instável → cardioversão`],
+  simples:`Batidas embaralhadas, sem espaçamento fixo. Os átrios tremem.`,
+  preceptor:`Meça três R-R: nenhum igual = FA.`,erro:`Cardioverter FA estável sem necessidade ou esquecer a anticoagulação.`},
+ e_flutter:{reconhecer:`Ondas F em dente de serra (típicas em DII/DIII/aVF), regular; condução 2:1 → FC ~150.`,
+  pensar:[`Linha de base serrilhada e regular? Flutter.`,`FC fixa em ~150 sugere condução 2:1.`],
+  pegadinha:`FC travada em ~150 deve sempre lembrar flutter 2:1.`,decore:[`Flutter = dente de serra`,`FC ~150 → pense em 2:1`],
+  simples:`O átrio bate num ritmo de serrote e o coração deixa passar uma a cada duas — por isso trava em ~150.`,
+  preceptor:`Taquicardia regular travada em 150? Procure o dente de serra.`,erro:`Tratar como TSV e perder o flutter.`},
+ e_tsv:{reconhecer:`QRS estreito, regular, muito rápido, sem P.`,
+  pensar:[`Estreito + regular + sem P → TSV.`,`Estável → vagal → adenosina.`],
+  pegadinha:`Adenosina lenta não funciona — bolus rápido + flush.`,decore:[`TSV: vagal → adenosina 6 → 12 mg`],
+  simples:`Rápido e certinho. A adenosina dá um reinício de poucos segundos.`,
+  preceptor:`Descreva o QRS antes de nomear: estreito e regular já é meio caminho.`,erro:`Cardioverter um estável de cara.`},
+ e_tv:{reconhecer:`QRS largo, regular, monomórfico; aqui instável (PA 80/50).`,
+  pensar:[`Largo + cardiopatia → trate como TV.`,`Com pulso + instável → cardioversão sincronizada.`],
+  pegadinha:`Dar adenosina numa TV; ou confundir cardioversão (com pulso) e desfibrilação (sem pulso).`,decore:[`TV com pulso instável → cardioversão sincronizada`,`Sem pulso → desfibrilação`],
+  simples:`Batidas largas vindas do ventrículo. Se a pressão caiu, choque sincronizado.`,
+  preceptor:`QRS largo: aposte em TV e cheque o pulso.`,erro:`Desfibrilar quem ainda tem pulso.`},
+ e_fv:{reconhecer:`Ondulações caóticas, sem QRS organizado, sem pulso → FV.`,
+  pensar:[`Sem QRS organizado + sem pulso → ritmo de parada chocável.`,`Desfibrilação imediata + RCP.`],
+  pegadinha:`Tentar sincronizar a FV — não há QRS para sincronizar; o choque é NÃO sincronizado.`,decore:[`FV = parada chocável → desfibrilação (não sincronizada) + RCP`],
+  simples:`O coração está tremendo sem bombear. Choque forte e massagem, já.`,
+  preceptor:`FV/TV sem pulso = desfibrilar e comprimir. Não priorize via aérea sobre o choque.`,erro:`Tentar sincronizar ou priorizar via aérea sobre o choque.`},
+ e_brady:{reconhecer:`P antes de cada QRS, regular, mas FC <60 (aqui 38) → bradicardia sinusal.`,
+  pensar:[`Relação P-QRS preservada + lento → sinusal lenta.`,`Instável? → atropina 1 mg.`],
+  pegadinha:`Tratar bradicardia assintomática estável. Trate a instável.`,decore:[`Bradi instável → atropina 1 mg → marca-passo`],
+  simples:`Ritmo certo, só que devagar demais. Se está passando mal, acelera com atropina.`,
+  preceptor:`Bradicardia: a pergunta é se há instabilidade, não só o número.`,erro:`Dose de atropina errada (0,5 mg) na bradicardia instável.`},
+ e_bav3:{reconhecer:`P e QRS independentes (dissociação AV), QRS de escape lento.`,
+  pensar:[`P e QRS marcham sem relação fixa → BAV total.`,`Instável → atropina (costuma falhar) + marca-passo.`],
+  pegadinha:`Confundir com bradicardia sinusal ou com BAV de 2º grau.`,decore:[`BAV total = dissociação AV completa`,`Atropina falha → marca-passo`],
+  simples:`Andar de cima e de baixo do coração batendo cada um para o seu lado.`,
+  preceptor:`Marque P e QRS separados; sem sincronia = bloqueio total.`,erro:`Só observar, perdendo a indicação de marca-passo.`},
+ e_stemi:{reconhecer:`Supradesnivelamento de ST; localize pela derivação acometida.`,
+  pensar:[`Tem supra? Sim → IAMCST.`,`Qual parede/derivações? → artéria → reperfusão.`],
+  pegadinha:`Esperar troponina para reperfundir, ou não localizar a parede.`,decore:[`Supra → IAMCST → reperfusão (angioplastia primária)`,`Inferior: DII/DIII/aVF (CD) · anterior: V1–V4 (DA) · lateral: DI/aVL/V5–V6 (Cx)`],
+  simples:`Quando o segmento ST sobe, há artéria entupida. Abra rápido.`,
+  preceptor:`Supra = relógio no ECG. Localize a parede e chame a hemodinâmica.`,erro:`Esperar enzima para agir no supra.`},
+ e_bavhi:{reconhecer:`Ondas P bloqueadas de forma intermitente (QRS caindo), bradicardia → BAV de 2º grau avançado.`,
+  pensar:[`Algumas P não conduzem (o QRS some)? BAV de 2º grau.`,`Avançado/Mobitz II → responde mal à atropina → marca-passo.`],
+  pegadinha:`Diferenciar Mobitz I (PR aumenta até cair) de Mobitz II (PR fixo e cai súbito) — o Mobitz II é mais perigoso.`,decore:[`Mobitz I = PR aumenta até cair (geralmente benigno)`,`Mobitz II/avançado = PR fixo + cai → marca-passo`],
+  simples:`De vez em quando uma batida falha. Quando falha de repente, sem aviso, é o tipo perigoso.`,
+  preceptor:`Mobitz II não namora atropina: pense em marca-passo.`,erro:`Tratar Mobitz II como benigno.`}
+};
+
+/* teaching das gasometrias (um por caso) */
+const TEACH_GASO={
+ g1:{reconhecer:`pH 7,12 (acidemia) + HCO₃ 8 (baixo) → acidose metabólica. PaCO₂ 24 baixo = compensação respiratória. Lactato 7 → acidose lática.`,
+  pensar:[`Passo 1: pH <7,35? Sim → acidose.`,`Passo 2: HCO₃ baixo? Sim → metabólica.`,`Passo 3: PaCO₂ caiu? Sim → o pulmão compensa.`,`Ânion-gap alto (lactato)? → acidose de AG aumentado.`],
+  pegadinha:`Esquecer o ânion-gap. Toda acidose metabólica pede AG = Na − (Cl+HCO₃).`,decore:[`Acidose metabólica → calcular AG = Na − (Cl+HCO₃), normal 10 ± 2`,`Winter: PaCO₂ esperada = 1,5×HCO₃ + 8 ± 2`],
+  simples:`O sangue azedou e o bicarbonato (o antiácido do corpo) está baixo. O pulmão tenta ajudar respirando rápido para soprar ácido (CO₂).`,
+  preceptor:`Toda acidose metabólica: cheque o ânion-gap e veja se o pulmão compensa pela fórmula de Winter.`,erro:`Diagnosticar "acidose metabólica" e não calcular o ânion-gap.`},
+ g2:{reconhecer:`pH 7,52 (alcalemia) + PaCO₂ 30 (baixo) + HCO₃ normal → alcalose respiratória; HCO₃ normal = aguda.`,
+  pensar:[`pH >7,45 → alcalose.`,`PaCO₂ baixo com HCO₃ normal → respiratória.`,`HCO₃ ainda normal → aguda (o rim ainda não compensou).`],
+  pegadinha:`Esperar compensação renal imediata — ela é lenta (horas a dias).`,decore:[`Alcalose respiratória = PaCO₂ baixo (hiperventilação)`,`Compensação renal é lenta`],
+  simples:`A pessoa respira rápido demais e sopra ácido demais; o sangue fica alcalino. O rim ainda não teve tempo de ajustar.`,
+  preceptor:`Hiperventilou? Pense em alcalose respiratória. Olhe o HCO₃ para datar (aguda x crônica).`,erro:`Confundir com alcalose metabólica (essa tem HCO₃ alto).`},
+ g3:{reconhecer:`pH 7,30 + PaCO₂ 60 (alto) → acidose respiratória; HCO₃ 29 (alto) = compensação renal (crônica).`,
+  pensar:[`pH baixo → acidose.`,`PaCO₂ alto → respiratória.`,`HCO₃ subiu → o rim compensa → crônica/agudizada.`],
+  pegadinha:`Achar que HCO₃ alto = alcalose metabólica. Aqui é COMPENSAÇÃO de uma acidose respiratória.`,decore:[`Acidose respiratória = PaCO₂ alto (hipoventilação)`,`HCO₃ alto pode ser só compensação`],
+  simples:`A pessoa respira de menos e acumula ácido (CO₂). Com o tempo, o rim segura bicarbonato para compensar.`,
+  preceptor:`Não leia o HCO₃ isolado: alto pode ser distúrbio primário OU compensação. O pH desempata.`,erro:`Ler HCO₃ alto como alcalose metabólica sem olhar pH/PaCO₂.`},
+ g4:{reconhecer:`pH 7,46 + HCO₃ 34 (alto) → alcalose metabólica; PaCO₂ 46 (subindo) = compensação respiratória (hipoventilação).`,
+  pensar:[`pH alto → alcalose.`,`HCO₃ alto → metabólica.`,`PaCO₂ subiu → o pulmão compensa.`],
+  pegadinha:`Confundir com acidose respiratória (PaCO₂ alto). O pH manda: aqui está alcalino.`,decore:[`Alcalose metabólica = HCO₃ alto`,`Tratar corrigindo volume, cloro e potássio`],
+  simples:`Sobra de antiácido (bicarbonato) deixa o sangue alcalino; o pulmão respira mais devagar para segurar ácido e compensar.`,
+  preceptor:`Alcalose metabólica costuma vir de vômito/diurético: pense em repor cloro, volume e potássio.`,erro:`Olhar só o PaCO₂ alto e cravar acidose respiratória.`},
+ g5:{reconhecer:`pH 7,18 (acidemia grave) + HCO₃ 12 (acidose metabólica) E PaCO₂ 55 (acidose respiratória) → distúrbio MISTO (as duas acidoses se somam).`,
+  pensar:[`pH muito baixo.`,`HCO₃ baixo (metabólica) E PaCO₂ alto (respiratória) ao mesmo tempo.`,`A compensação anda no sentido errado → misto.`],
+  pegadinha:`Quando o que deveria compensar piora o pH, é distúrbio misto — não compensação.`,decore:[`Compensação no sentido errado = distúrbio misto`,`Acidose metabólica + respiratória = pH despenca`],
+  simples:`Dois problemas ao mesmo tempo: o metabolismo azeda E o pulmão não sopra ácido. Os dois empurram o pH para baixo.`,
+  preceptor:`Cheque se a compensação faz sentido. Se não faz, há um segundo distúrbio escondido.`,erro:`Chamar de "acidose metabólica compensada" quando há acidose respiratória junto.`},
+ g6:{reconhecer:`pH 7,40, PaCO₂ 40, HCO₃ 24 → aparentemente normal. Mas um pH normal pode esconder distúrbio misto.`,
+  pensar:[`Tudo normal? Aparentemente.`,`Sempre cheque o ânion-gap e a clínica — distúrbios opostos podem se cancelar no pH.`],
+  pegadinha:`Dar "normal" e parar. Um AG alto com pH normal já denuncia distúrbio misto.`,decore:[`pH normal NÃO exclui distúrbio misto`,`Sempre calcular o ânion-gap`],
+  simples:`Às vezes dois problemas se cancelam e o pH fica normal. Por isso a gente sempre confere o ânion-gap e olha o paciente.`,
+  preceptor:`pH normal não é alta médica: calcule o AG e correlacione com a clínica.`,erro:`Liberar como normal sem calcular o ânion-gap.`}
+};
+
+/* ---------- render do painel preceptor ---------- */
+let _tuid=0;
+function teachPanel(t){
+  if(!t)return '';
+  _tuid++; const u='tv'+_tuid;
+  let h='<div class="teach">';
+  if(t.reconhecer)h+=`<div class="teach-sec"><span class="tlabel">Como reconhecer</span><p>${t.reconhecer}</p></div>`;
+  if(t.pensar&&t.pensar.length)h+=`<div class="teach-sec"><span class="tlabel">Como pensar</span><ul class="think">`+t.pensar.map(s=>`<li>${s}</li>`).join('')+`</ul></div>`;
+  if(t.pegadinha)h+=`<div class="teach-sec"><span class="tlabel">Pegadinha clássica da prova</span><p>${t.pegadinha}</p></div>`;
+  if(t.decore&&t.decore.length)h+=`<div class="decore"><span class="tlabel">📌 Decore</span><ul>`+t.decore.map(d=>`<li>${d}</li>`).join('')+`</ul></div>`;
+  h+='<div class="teach-btns">';
+  if(t.simples)h+=`<button class="tbtn" onclick="tog('${u}s')">🧠 Explique de forma simples</button>`;
+  if(t.preceptor)h+=`<button class="tbtn" onclick="tog('${u}p')">👨‍⚕️ O que um preceptor diria?</button>`;
+  if(t.erro)h+=`<button class="tbtn" onclick="tog('${u}e')">🚫 Erro que mais reprova</button>`;
+  h+='</div>';
+  if(t.simples)h+=`<div class="treveal simples" id="${u}s">${t.simples}</div>`;
+  if(t.preceptor)h+=`<div class="treveal" id="${u}p"><b>Preceptor:</b> ${t.preceptor}</div>`;
+  if(t.erro)h+=`<div class="treveal erro" id="${u}e"><b>Erro que mais reprova:</b> ${t.erro}</div>`;
+  return h+'</div>';
+}
+function tog(id){const e=document.getElementById(id);if(e)e.style.display=(e.style.display==='block'?'none':'block');}
+function fluxoBlock(arr){
+  if(!arr||!arr.length)return '';
+  const body=arr.map((s,i)=>{
+    const isQ=/\?$/.test(s); const isEnd=(i===arr.length-1);
+    const cls='fstep'+(isQ?' q':'')+(isEnd?' end':'');
+    return `<span class="${cls}">${s}</span>`+(i<arr.length-1?`<span class="farr">↓</span>`:'');
+  }).join('');
+  return `<div class="teach" style="padding:14px 17px"><span class="tlabel">🧠 Como pensar na prova</span><div class="fluxo">${body}</div></div>`;
+}
+
+</script>
+<script id="views">
+/* ============================================================
+   CAMADA DE VISÃO / NAVEGAÇÃO
+   ============================================================ */
+const app=document.getElementById('app');
+function $(id){return document.getElementById(id);}
+function topic(t){return TOPICS[t]||t;}
+
+/* navegação central */
+function go(screen,param){window.scrollTo(0,0);VIEWS[screen](param);}
+
+/* cabeçalho de marca (hub) */
+function brandHead(){
+  return `<div class="brand"><span class="pulse"></span><span class="title">Sala Vermelha · PR2</span></div>`;
+}
+/* barra superior das telas internas */
+function topbar(tag,back){
+  return `<div class="topbar"><button class="back" onclick="go('${back||'hub'}')">‹ Voltar</button>
+    <span class="modetag">${tag}</span></div>`;
+}
+/* cabeçalho do caso */
+function caseHead(c){
+  return `<div class="casehead"><span class="who">${c.who}</span><span class="chip">${c.chip}</span></div>
+    <p class="narr">${c.narrative}</p>
+    <div class="exam">${c.exam}</div>`;
+}
+/* painel de labs / ECG / resultados */
+function labsBlock(b){
+  let h='<div class="labpanel">';
+  if(b.cap)h+=`<div class="cap">${b.cap}</div>`;
+  if(b.ecg)h+=ecgSVG(b.ecg,b.lead||'DII');
+  if(b.items&&b.items.length){
+    h+='<div class="labgrid">'+b.items.map(it=>`<div class="lab"><span class="n">${it[0]}</span><span class="v ${it[2]||''}">${it[1]}</span></div>`).join('')+'</div>';
+  }
+  if(b.text)h+=`<p class="narr" style="margin-bottom:0">${b.text}</p>`;
+  return h+'</div>';
+}
+/* feedback do preceptor */
+function feedbackBox(grade,fb){
+  const cls=grade==='good'?'good':grade==='part'?'part':'miss';
+  const who=grade==='good'?'Preceptor · acertou':grade==='part'?'Preceptor · quase lá':'Preceptor · atenção';
+  const msg=(fb&&fb[grade])||(fb&&fb.miss)||'';
+  return `<div class="feedback ${cls}"><span class="who">${who}</span>${msg}</div>`;
+}
+function resumoBlock(b){
+  return `<div class="resumo"><h3>Resumo PR2</h3><dl>
+    <dt>Diagnóstico</dt><dd>${b.dx}</dd>
+    <dt>Critérios / interpretação</dt><dd>${b.criterios}</dd>
+    <dt>Conduta</dt><dd>${b.conduta}</dd>
+    <dt>Pegadinha</dt><dd class="pega">${b.pega}</dd>
+  </dl></div>`;
+}
+
+/* ============================================================
+   HUB
+   ============================================================ */
+const VIEWS={};
+VIEWS.hub=function(){
+  const cards=[
+    ['plantaoList','PLT','Plantão Sala Vermelha','Casos clínicos completos — hipótese, gravidade, conduta, exames, evolução.',`${PLANTAO.length} casos · ${countSolved('plantao')} resolvidos`],
+    ['ecgList','ECG','ECG Challenge','Ritmo, frequência, estabilidade e conduta. Inclui paredes do IAM.',`${ECG_ITEMS.length} traçados`],
+    ['gasoList','GAS','Gasometria Challenge','pH, distúrbio primário, compensação e misto — passo a passo.',`${GASO_ITEMS.length} casos`],
+    ['simulado','SIM','Simulado PR2','Prova final no estilo da disciplina, com correção imediata.',`${SIMULADO.length} questões`],
+    ['tools','CALC','Calculadoras','Parkland (queimadura) e analisador de gasometria.','Regra dos Nove · ácido-base'],
+    ['resolved','✓','Casos resolvidos','Sua biblioteca de plantão.',`${countSolved('plantao')} casos`]
+  ];
+  app.innerHTML=brandHead()+
+    `<h1 class="lede">Você está de <em>plantão</em>.</h1>
+     <p class="sub">Reconhecer o padrão, classificar a gravidade, decidir a conduta, interpretar o exame, reavaliar. Conteúdo clínico 100% baseado no livro de Medicina de Emergência (USP/HC-FMUSP, 18ª ed.); estilo de cobrança calibrado pelas provas e pelo Desafio Sala Vermelha.</p>
+     <div class="hubgrid">`+
+    cards.map(c=>`<button class="card" onclick="go('${c[0]}')">
+        <span class="glyph">${c[1]}</span>
+        <span class="body"><span class="name">${c[2]}</span><span class="desc">${c[3]}</span><span class="meta">${c[4]}</span></span>
+        <span class="chev">›</span></button>`).join('')+
+    `</div>
+     <p class="disclaimer">Fonte soberana do conteúdo: <em>Medicina de Emergência: Abordagem Prática</em>, USP/HC-FMUSP, 18ª ed. (Manole). Traçados de ECG são esquemáticos, para treino de reconhecimento. Ferramenta de estudo — não substitui protocolo institucional nem julgamento clínico à beira do leito.</p>`;
+};
+
+/* ============================================================
+   PLANTÃO — lista e runner
+   ============================================================ */
+VIEWS.plantaoList=function(){
+  app.innerHTML=topbar('Plantão Sala Vermelha','hub')+
+    `<h1 class="lede" style="font-size:24px">Escolha o caso</h1>
+     <p class="sub">Cada caso é uma investigação: você decide o que pedir, interpreta os dados e constrói o diagnóstico. Dados → interpretação → raciocínio → diagnóstico → conduta. O painel <em>📋 Dados disponíveis</em> fica visível o tempo todo.</p>
+     <div class="list">`+
+    PLANTAO.map(c=>`<button class="litem ${isSolved('plantao',c.id)?'solved':''}" onclick="startCase('${c.id}')">
+        <span class="t">${c.who}</span>
+        <span style="display:flex;gap:8px;align-items:center">
+          <span class="s">${topic(c.topic)}</span><span class="tag">${c.sev}</span>
+        </span></button>`).join('')+
+    `</div>`;
+};
+
+let CASE=null;
+function startCase(id){CASE={id:id,i:0,answered:{},dadosOpen:true};window.scrollTo(0,0);renderCase();}
+
+/* dados liberados até a etapa atual (base + reveal de blocos já vencidos) */
+function caseUnlocked(c){
+  const u=new Set(c.baseData||['vitais']);
+  for(let k=0;k<=CASE.i && k<c.blocks.length;k++){
+    const b=c.blocks[k];
+    const interactive=(b.type==='q'||b.type==='choice'||b.type==='action');
+    const passed=interactive?!!CASE.answered[k]:true;
+    if(passed){
+      if(b.reveal)b.reveal.forEach(x=>u.add(x));
+      if(b.type==='action'&&CASE.answered[k]){const o=b.options[CASE.answered[k].opt];if(o&&o.reveal)o.reveal.forEach(x=>u.add(x));}
+    }
+  }
+  return u;
+}
+function dataItemHTML(d){
+  const cap=d.cap?`<div class="cap">${d.cap}</div>`:'';
+  if(d.kind==='vitals')return monitor(d.vals);
+  if(d.kind==='ecg')return cap+ecgSVG(d.ecg,d.lead||'DII')+(d.note?`<p class="dnote">${d.note}</p>`:'');
+  if(d.kind==='labs')return cap+'<div class="labgrid">'+d.items.map(it=>`<div class="lab"><span class="n">${it[0]}</span><span class="v ${it[2]||''}">${it[1]}</span></div>`).join('')+'</div>';
+  if(d.kind==='exam'||d.kind==='image')return cap+`<p class="dnote">${d.text}</p>`;
+  return '';
+}
+function renderDados(c,unlocked){
+  const items=c.data.filter(d=>unlocked.has(d.key));
+  const body=items.length?items.map(dataItemHTML).join('<hr class="ddiv">'):`<p class="dados-empty">Ainda sem dados coletados — decida sua primeira atitude.</p>`;
+  const open=CASE.dadosOpen!==false;
+  return `<div class="dados">
+    <button class="dados-head" onclick="toggleDados()"><span class="dh-t">📋 Dados disponíveis</span><span class="dh-c" id="dadosCaret">${open?'▾ ocultar':'▸ abrir'}</span></button>
+    <div class="dados-body" id="dadosBody" style="display:${open?'block':'none'}">${body}</div>
+  </div>`;
+}
+function toggleDados(){CASE.dadosOpen=!(CASE.dadosOpen!==false);const b=$('dadosBody'),c=$('dadosCaret');if(b)b.style.display=CASE.dadosOpen?'block':'none';if(c)c.textContent=CASE.dadosOpen?'▾ ocultar':'▸ abrir';}
+function verdictLabel(g){return g==='good'?'✅ Correto':g==='part'?'⚠️ Parcialmente correto':'❌ Incorreto';}
+
+function renderBlock(c,b,k,active){
+  const last=(k===c.blocks.length-1);
+  const cont=(active&&!last)?`<div class="btnrow"><button class="btn" onclick="nextStep()">Continuar ›</button></div>`:'';
+  if(b.type==='q'){
+    let s='<div class="step"><div class="etapa">'+b.etapa+'</div><div class="q">'+b.q+'</div>';
+    const a=CASE.answered[k];
+    if(!a){
+      s+=`<div class="field"><input type="text" id="ans${k}" placeholder="Sua resposta…" autocomplete="off"
+            onkeydown="if(event.key==='Enter')submitAnswer(${k})">
+            <button class="btn" onclick="submitAnswer(${k})">Responder</button></div>
+            <div class="scorebar">Resposta aberta — sinônimos e abreviações são aceitos.</div>`;
+    }else{
+      s+=`<div class="note">Você respondeu: "${esc(a.input)}" — ${verdictLabel(a.grade)}</div>`+feedbackBox(a.grade,b.fb)+teachPanel(b.teach)+cont;
+    }
+    return s+'</div>';
+  }
+  if(b.type==='choice'||b.type==='action'){
+    const a=CASE.answered[k];
+    let s='<div class="step"><div class="etapa">'+b.etapa+'</div><div class="q">'+b.q+'</div><div class="choices">';
+    b.options.forEach((o,idx)=>{
+      let cls='choice';
+      if(a){
+        const right=(b.type==='choice')?!!o.correct:!!o.best;
+        if(right)cls+=' correct'; else if(a.opt===idx)cls+=' wrong';
+        cls+=' disabled';
+      }
+      s+=`<button class="${cls}" ${a?'':`onclick="pickOpt(${k},${idx})"`}><span class="k">${'ABCD'[idx]||'•'}</span>${o.label}</button>`;
+    });
+    s+='</div>';
+    if(a)s+=`<div class="note">${verdictLabel(a.grade)}</div>`+feedbackBox(a.grade,b.fb)+teachPanel(b.teach)+cont;
+    return s+'</div>';
+  }
+  if(b.type==='evo')return `<div class="step"><div class="etapa">Evolução</div><p class="narr" style="margin:0">${b.text}</p></div>`+cont;
+  if(b.type==='resumo'){
+    markSolved('plantao',c.id);
+    const idx=PLANTAO.findIndex(x=>x.id===c.id);const nxt=PLANTAO[idx+1];
+    return resumoBlock(b)+fluxoBlock(c.fluxo)+
+      `<div class="btnrow"><button class="btn ghost" onclick="go('plantaoList')">‹ Casos</button>`+
+      (nxt?`<button class="btn" onclick="startCase('${nxt.id}')">Próximo caso ›</button>`:`<button class="btn" onclick="go('hub')">Encerrar plantão</button>`)+`</div>`;
+  }
+  return '';
+}
+
+function renderCase(){
+  const c=PLANTAO.find(x=>x.id===CASE.id);
+  if(CASE.dadosOpen===undefined)CASE.dadosOpen=true;
+  _tuid=0;
+  const unlocked=caseUnlocked(c);
+  let h=topbar('Plantão · '+topic(c.topic),'plantaoList');
+  h+=`<div class="casehead"><span class="who">${c.who}</span><span class="chip">${c.chip}</span></div><p class="narr">${c.hist}</p>`;
+  h+=renderDados(c,unlocked);
+  for(let k=0;k<=CASE.i && k<c.blocks.length;k++){
+    h+=renderBlock(c,c.blocks[k],k,(k===CASE.i));
+  }
+  app.innerHTML=h;
+  const inp=$('ans'+CASE.i);if(inp)inp.focus();
+}
+function submitAnswer(k){
+  const c=PLANTAO.find(x=>x.id===CASE.id);const b=c.blocks[k];
+  const inp=$('ans'+k);if(!inp)return;const val=inp.value.trim();
+  if(!val){inp.focus();return;}
+  CASE.answered[k]={input:val,grade:gradeOpen(val,b)};
+  renderCase();
+}
+function pickOpt(k,idx){
+  const c=PLANTAO.find(x=>x.id===CASE.id);const b=c.blocks[k];
+  const grade=(b.type==='choice')?(b.options[idx].correct?'good':'miss'):(b.options[idx].best?'good':'part');
+  CASE.answered[k]={opt:idx,grade:grade};
+  renderCase();
+}
+function nextStep(){const c=PLANTAO.find(x=>x.id===CASE.id);if(CASE.i<c.blocks.length-1){CASE.i++;renderCase();window.scrollTo(0,document.body.scrollHeight);}}
+
+/* ============================================================
+   ECG CHALLENGE
+   ============================================================ */
+VIEWS.ecgList=function(){
+  app.innerHTML=topbar('ECG Challenge','hub')+
+    `<h1 class="lede" style="font-size:24px">Reconhecimento de ritmo</h1>
+     <p class="sub">Para cada traçado: ritmo, frequência, estabilidade e conduta. Corrija e veja o raciocínio.</p>
+     <div class="list">`+
+    ECG_ITEMS.map((e,i)=>`<button class="litem" onclick="startEcg(${i})">
+        <span class="t">Traçado ${i+1}</span><span class="s">${e.lead} · ${e.estab}</span></button>`).join('')+
+    `</div>`;
+};
+let ECGRUN=null;
+function startEcg(i){ECGRUN={i:i,estab:null,checked:false};window.scrollTo(0,0);renderEcg();}
+function renderEcg(){
+  const e=ECG_ITEMS[ECGRUN.i]; _tuid=0;
+  let h=topbar('ECG · '+(ECGRUN.i+1)+'/'+ECG_ITEMS.length,'ecgList');
+  h+=monitor(e.vitals)+ecgSVG(e.type,e.lead);
+  if(!ECGRUN.checked){
+    h+=`<div class="step"><div class="etapa">Etapa 1 · Ritmo</div>
+        <div class="field"><input type="text" id="ecgRitmo" placeholder="Qual o ritmo?" autocomplete="off"></div></div>
+      <div class="step"><div class="etapa">Etapa 2 · Frequência</div>
+        <div class="field"><input type="text" id="ecgFc" placeholder="FC aproximada" autocomplete="off"></div></div>
+      <div class="step"><div class="etapa">Etapa 3 · Estabilidade</div>
+        <div class="choices">
+          <button class="choice" id="estE" onclick="selEstab('estavel')"><span class="k">A</span>Estável</button>
+          <button class="choice" id="estI" onclick="selEstab('instavel')"><span class="k">B</span>Instável</button>
+        </div></div>
+      <div class="step"><div class="etapa">Etapa 4 · Conduta</div>
+        <div class="field"><input type="text" id="ecgCond" placeholder="Conduta imediata" autocomplete="off"></div></div>
+      <div class="btnrow"><button class="btn" onclick="checkEcg()">Corrigir</button></div>`;
+  }else{
+    const r=ECGRUN.res;
+    h+=`<div class="step"><div class="etapa">Ritmo</div><div class="note">Você: "${esc(r.ritmo.input)}"</div>${feedbackBox(r.ritmo.grade,{good:e.ritmo.fb,part:e.ritmo.fb,miss:e.ritmo.fb})}</div>`;
+    h+=`<div class="step"><div class="etapa">Frequência</div><div class="note">Você: "${esc(r.fc.input)}"</div>${feedbackBox(r.fc.grade,{good:e.fc.fb,part:e.fc.fb,miss:e.fc.fb})}</div>`;
+    h+=`<div class="step"><div class="etapa">Estabilidade</div>${feedbackBox(r.estab.grade,{good:'Correto: '+(e.estab==='estavel'?'estável':'instável')+'.',miss:'O correto é '+(e.estab==='estavel'?'estável':'instável')+'. Reveja os critérios de instabilidade (hipotensão, rebaixamento, dor isquêmica, choque).'})}</div>`;
+    h+=`<div class="step"><div class="etapa">Conduta</div><div class="note">Você: "${esc(r.cond.input)}"</div>${feedbackBox(r.cond.grade,{good:e.conduta.fb,part:e.conduta.fb,miss:e.conduta.fb})}</div>`;
+    h+=teachPanel(TEACH_ECG[e.id]);
+    const nxt=ECGRUN.i+1<ECG_ITEMS.length;
+    h+=`<div class="btnrow"><button class="btn ghost" onclick="go('ecgList')">‹ Lista</button>`+
+      (nxt?`<button class="btn" onclick="startEcg(${ECGRUN.i+1})">Próximo ›</button>`:`<button class="btn" onclick="go('hub')">Concluir</button>`)+`</div>`;
+  }
+  app.innerHTML=h;
+  if(!ECGRUN.checked){const r=$('ecgRitmo');if(r)r.focus();}
+}
+function selEstab(v){ECGRUN.estab=v;
+  const e=$('estE'),i=$('estI');if(!e||!i)return;
+  e.classList.toggle('correct',v==='estavel');e.classList.remove('wrong');
+  i.classList.toggle('correct',v==='instavel');i.classList.remove('wrong');
+}
+function checkEcg(){
+  const e=ECG_ITEMS[ECGRUN.i];
+  const ritmo=($('ecgRitmo').value||'').trim();
+  const fc=($('ecgFc').value||'').trim();
+  const cond=($('ecgCond').value||'').trim();
+  ECGRUN.res={
+    ritmo:{input:ritmo,grade:gradeOpen(ritmo,e.ritmo)},
+    fc:{input:fc,grade:gradeOpen(fc,e.fc)},
+    estab:{grade:ECGRUN.estab===e.estab?'good':'miss'},
+    cond:{input:cond,grade:gradeOpen(cond,e.conduta)}
+  };
+  ECGRUN.checked=true;markSolved('ecg',e.id);window.scrollTo(0,0);renderEcg();
+}
+
+/* ============================================================
+   GASOMETRIA CHALLENGE
+   ============================================================ */
+VIEWS.gasoList=function(){
+  app.innerHTML=topbar('Gasometria Challenge','hub')+
+    `<h1 class="lede" style="font-size:24px">Análise passo a passo</h1>
+     <p class="sub">pH → distúrbio primário → compensação → misto. Use o analisador nas Calculadoras para casos próprios.</p>
+     <div class="list">`+
+    GASO_ITEMS.map((g,i)=>`<button class="litem" onclick="startGaso(${i})">
+        <span class="t">Gasometria ${i+1}</span><span class="s">pH ${g.vals[0][1]}</span></button>`).join('')+
+    `</div>`;
+};
+let GASORUN=null;
+function startGaso(i){GASORUN={i:i,checked:false};window.scrollTo(0,0);renderGaso();}
+function renderGaso(){
+  const g=GASO_ITEMS[GASORUN.i]; _tuid=0;
+  let h=topbar('Gasometria · '+(GASORUN.i+1)+'/'+GASO_ITEMS.length,'gasoList');
+  h+='<div class="labpanel"><div class="cap">Gasometria arterial</div><div class="labgrid">'+
+     g.vals.map(v=>`<div class="lab"><span class="n">${v[0]}</span><span class="v ${v[2]||''}">${v[1]}</span></div>`).join('')+'</div></div>';
+  if(!GASORUN.checked){
+    h+=`<div class="step"><div class="etapa">Passo 1 · Acidose ou alcalose?</div>
+        <div class="field"><input type="text" id="gpH" placeholder="acidose / alcalose / normal" autocomplete="off"></div></div>
+      <div class="step"><div class="etapa">Passo 2 · Respiratório ou metabólico?</div>
+        <div class="field"><input type="text" id="gPri" placeholder="metabólica / respiratória" autocomplete="off"></div></div>
+      <div class="step"><div class="etapa">Passo 3 · Existe compensação?</div>
+        <div class="field"><input type="text" id="gComp" placeholder="há compensação? aguda/crônica?" autocomplete="off"></div></div>
+      <div class="step"><div class="etapa">Passo 4 · Simples ou misto?</div>
+        <div class="field"><input type="text" id="gMisto" placeholder="distúrbio simples ou misto?" autocomplete="off"></div></div>
+      <div class="step"><div class="etapa">Passo 5 · Diagnóstico final</div>
+        <div class="field"><input type="text" id="gFinal" placeholder="qual o distúrbio?" autocomplete="off"></div></div>
+      <div class="btnrow"><button class="btn" onclick="checkGaso()">Corrigir</button></div>`;
+  }else{
+    const r=GASORUN.res;
+    const fbx=(o,key)=>feedbackBox(o.grade,{good:GASO_ITEMS[GASORUN.i][key].fb,part:GASO_ITEMS[GASORUN.i][key].fb,miss:GASO_ITEMS[GASORUN.i][key].fb});
+    h+=`<div class="step"><div class="etapa">Passo 1 · Acidose ou alcalose?</div><div class="note">Você: "${esc(r.pH.input)}" — ${verdictLabel(r.pH.grade)}</div>${fbx(r.pH,'pH')}</div>`;
+    h+=`<div class="step"><div class="etapa">Passo 2 · Respiratório ou metabólico?</div><div class="note">Você: "${esc(r.pri.input)}" — ${verdictLabel(r.pri.grade)}</div>${fbx(r.pri,'primario')}</div>`;
+    h+=`<div class="step"><div class="etapa">Passo 3 · Compensação?</div><div class="note">Você: "${esc(r.comp.input)}" — ${verdictLabel(r.comp.grade)}</div>${fbx(r.comp,'comp')}</div>`;
+    h+=`<div class="step"><div class="etapa">Passo 4 · Simples ou misto?</div><div class="note">Você: "${esc(r.misto.input)}" — ${verdictLabel(r.misto.grade)}</div>${fbx(r.misto,'misto')}</div>`;
+    h+=`<div class="step"><div class="etapa">Passo 5 · Diagnóstico final</div><div class="note">Você: "${esc(r.fin.input)}" — ${verdictLabel(r.fin.grade)}</div>${fbx(r.fin,'final')}</div>`;
+    h+=teachPanel(TEACH_GASO[g.id]);
+    const nxt=GASORUN.i+1<GASO_ITEMS.length;
+    h+=`<div class="btnrow"><button class="btn ghost" onclick="go('gasoList')">‹ Lista</button>`+
+      (nxt?`<button class="btn" onclick="startGaso(${GASORUN.i+1})">Próximo ›</button>`:`<button class="btn" onclick="go('hub')">Concluir</button>`)+`</div>`;
+  }
+  app.innerHTML=h;if(!GASORUN.checked){const x=$('gpH');if(x)x.focus();}
+}
+function checkGaso(){
+  const g=GASO_ITEMS[GASORUN.i];
+  const pH=($('gpH').value||'').trim(),pri=($('gPri').value||'').trim(),comp=($('gComp').value||'').trim();
+  const misto=($('gMisto').value||'').trim(),fin=($('gFinal').value||'').trim();
+  GASORUN.res={
+    pH:{input:pH,grade:gradeOpen(pH,g.pH)},
+    pri:{input:pri,grade:gradeOpen(pri,g.primario)},
+    comp:{input:comp,grade:gradeOpen(comp,g.comp)},
+    misto:{input:misto,grade:gradeOpen(misto,g.misto)},
+    fin:{input:fin,grade:gradeOpen(fin,g.final)}
+  };
+  GASORUN.checked=true;markSolved('gaso',g.id);window.scrollTo(0,0);renderGaso();
+}
+
+/* ============================================================
+   SIMULADO PR2
+   ============================================================ */
+let SIM=null;
+VIEWS.simulado=function(){
+  SIM={i:0,score:0,answered:false,byTopic:{},pick:null};
+  renderSim();
+};
+function renderSim(){
+  if(SIM.i>=SIMULADO.length){return renderSimResult();}
+  const q=SIMULADO[SIM.i];
+  let h=topbar('Simulado · '+(SIM.i+1)+'/'+SIMULADO.length,'hub');
+  h+=`<div class="scorebar">${topic(q.topic)} · acertos ${SIM.score}/${SIM.i}</div>`;
+  h+=`<div class="step"><div class="q">${q.q}</div><div class="choices">`;
+  q.ch.forEach((opt,idx)=>{
+    let cls='choice';
+    if(SIM.answered){
+      if(idx===q.correct)cls+=' correct';
+      else if(idx===SIM.pick)cls+=' wrong';
+      cls+=' disabled';
+    }
+    h+=`<button class="${cls}" onclick="simPick(${idx})"><span class="k">${'ABCD'[idx]}</span>${opt}</button>`;
+  });
+  h+='</div>';
+  if(SIM.answered){
+    const ok=SIM.pick===q.correct;
+    h+=`<div class="feedback ${ok?'good':'miss'}"><span class="who">${ok?'Correto':'Resposta: '+'ABCD'[q.correct]}</span>${q.expl}</div>`;
+    const last=SIM.i===SIMULADO.length-1;
+    h+=`<div class="btnrow"><button class="btn" onclick="simNext()">${last?'Ver resultado ›':'Próxima ›'}</button></div>`;
+  }
+  h+='</div>';
+  app.innerHTML=h;
+}
+function simPick(idx){
+  if(SIM.answered)return;
+  const q=SIMULADO[SIM.i];SIM.pick=idx;SIM.answered=true;
+  SIM.byTopic[q.topic]=SIM.byTopic[q.topic]||{n:0,ok:0};SIM.byTopic[q.topic].n++;
+  if(idx===q.correct){SIM.score++;SIM.byTopic[q.topic].ok++;}
+  renderSim();
+}
+function simNext(){SIM.i++;SIM.answered=false;SIM.pick=null;window.scrollTo(0,0);renderSim();}
+function renderSimResult(){
+  markSolved('sim','done');
+  const pct=Math.round(100*SIM.score/SIMULADO.length);
+  let h=topbar('Simulado · resultado','hub');
+  h+=`<div class="center"><div class="bigscore">${SIM.score}/${SIMULADO.length}</div>
+      <p class="sub" style="margin:0 auto">${pct}% de acerto${pct>=70?' — pronta para a Sala Vermelha.':pct>=50?' — quase lá, revise os erros.':' — vale revisar os Tier 1 (arritmias, SCA, sepse).'}</p></div>`;
+  h+='<hr class="sep"><div class="cap" style="font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px">Desempenho por tema</div><div class="list">';
+  Object.keys(SIM.byTopic).forEach(t=>{const b=SIM.byTopic[t];
+    h+=`<div class="litem"><span class="t">${topic(t)}</span><span class="s">${b.ok}/${b.n}</span></div>`;});
+  h+='</div><div class="btnrow"><button class="btn ghost" onclick="go(\'hub\')">‹ HUB</button><button class="btn" onclick="go(\'simulado\')">Refazer ›</button></div>';
+  app.innerHTML=h;
+}
+
+/* ============================================================
+   CALCULADORAS — Parkland + Gasometria
+   ============================================================ */
+const NOVE=[['Cabeça/pescoço',9],['Tórax + abdome (ant.)',18],['Dorso',18],['MSD',9],['MSE',9],['MID',18],['MIE',18],['Genitália',1]];
+let PARK={sel:{},peso:70};
+VIEWS.tools=function(){
+  PARK={sel:{},peso:70};
+  app.innerHTML=topbar('Calculadoras','hub')+
+    `<h1 class="lede" style="font-size:24px">Parkland & Gasometria</h1>
+     <div class="calc">
+       <label>Áreas queimadas (Regra dos Nove — não conta 1º grau)</label>
+       <div class="bodymap" id="bodymap">`+
+       NOVE.map((r,i)=>`<button class="bodybtn" id="bm${i}" onclick="toggleArea(${i},${r[1]})">${r[0]}<span class="pct">${r[1]}%</span></button>`).join('')+
+       `</div>
+       <label>Peso (kg)</label>
+       <input type="number" id="peso" value="70" inputmode="decimal" oninput="calcParkland()">
+       <div class="calcout" id="parkOut"></div>
+     </div>
+     <hr class="sep">
+     <div class="calc">
+       <label>Analisador de gasometria</label>
+       <label>pH</label><input type="number" id="ga_ph" placeholder="7,40" inputmode="decimal" oninput="calcGaso()">
+       <label>PaCO₂ (mmHg)</label><input type="number" id="ga_co2" placeholder="40" inputmode="decimal" oninput="calcGaso()">
+       <label>HCO₃ (mEq/L)</label><input type="number" id="ga_hco3" placeholder="24" inputmode="decimal" oninput="calcGaso()">
+       <label>Na⁺ (opcional, p/ ânion-gap)</label><input type="number" id="ga_na" placeholder="140" inputmode="decimal" oninput="calcGaso()">
+       <label>Cl⁻ (opcional)</label><input type="number" id="ga_cl" placeholder="104" inputmode="decimal" oninput="calcGaso()">
+       <div class="calcout" id="gasoOut"><span class="lab">Preencha pH, PaCO₂ e HCO₃</span></div>
+     </div>
+     <p class="note">Fórmulas do livro: Parkland 4 mL × kg × %SCQ (½ nas 8 h, Ringer lactato, diurese-alvo 0,5 mL/kg/h). Ânion-gap = Na − (Cl + HCO₃), normal 10 ± 2. Acidose metabólica: PaCO₂ esperada = (1,5 × HCO₃) + 8 ± 2.</p>`;
+  calcParkland();
+};
+function toggleArea(i,pct){PARK.sel[i]=!PARK.sel[i];$('bm'+i).classList.toggle('sel',PARK.sel[i]);calcParkland();}
+function calcParkland(){
+  let scq=0;NOVE.forEach((r,i)=>{if(PARK.sel[i])scq+=r[1];});
+  const peso=parseFloat(($('peso').value||'').replace(',','.'))||0;
+  const out=$('parkOut');if(!out)return;
+  if(scq===0||peso===0){out.innerHTML='<span class="lab">Selecione as áreas e informe o peso</span>';return;}
+  const total=4*peso*scq, prim8=total/2, taxa8=prim8/8, rem16=total/2, taxa16=rem16/16, diur=(0.5*peso);
+  out.innerHTML=`<div class="lab">Volume de Ringer lactato (24 h)</div><div class="big">${Math.round(total).toLocaleString('pt-BR')} mL</div>
+    <div class="row"><span>SCQ estimada</span><span>${scq}%</span></div>
+    <div class="row"><span>Primeiras 8 h (½)</span><span>${Math.round(prim8).toLocaleString('pt-BR')} mL · ${Math.round(taxa8)} mL/h</span></div>
+    <div class="row"><span>16 h seguintes</span><span>${Math.round(rem16).toLocaleString('pt-BR')} mL · ${Math.round(taxa16)} mL/h</span></div>
+    <div class="row"><span>Diurese-alvo (adulto)</span><span>~${Math.round(diur)} mL/h (0,5 mL/kg/h)</span></div>`;
+}
+function calcGaso(){
+  const out=$('gasoOut');if(!out)return;
+  const ph=parseFloat(($('ga_ph').value||'').replace(',','.'));
+  const co2=parseFloat(($('ga_co2').value||'').replace(',','.'));
+  const hco3=parseFloat(($('ga_hco3').value||'').replace(',','.'));
+  const na=parseFloat(($('ga_na').value||'').replace(',','.'));
+  const cl=parseFloat(($('ga_cl').value||'').replace(',','.'));
+  if(isNaN(ph)||isNaN(co2)||isNaN(hco3)){out.innerHTML='<span class="lab">Preencha pH, PaCO₂ e HCO₃</span>';return;}
+  let estado=ph<7.35?'Acidemia':ph>7.45?'Alcalemia':'pH normal';
+  let prim='—',rows=[];
+  if(ph<7.35){
+    if(hco3<22){prim='Acidose metabólica';
+      const esp=(1.5*hco3+8);rows.push(['PaCO₂ esperada (Winter)',(esp-2).toFixed(0)+'–'+(esp+2).toFixed(0)]);
+      rows.push(['Compensação respiratória, co2<esp-2?',co2< esp-2?'+ acidose resp. associada':co2>esp+2?'+ alcalose resp. associada':'adequada']);
+    } else if(co2>45){prim='Acidose respiratória';}
+    else prim='Acidose (avaliar)';
+  } else if(ph>7.45){
+    if(hco3>26){prim='Alcalose metabólica';}
+    else if(co2<35){prim='Alcalose respiratória';}
+    else prim='Alcalose (avaliar)';
+  } else {
+    prim='pH normal — atenção a distúrbio misto';
+  }
+  let agTxt='';
+  if(!isNaN(na)&&!isNaN(cl)){
+    const ag=na-(cl+hco3);
+    agTxt=ag>12?'alto ('+ag.toFixed(0)+') → acidose de AG aumentado':ag<8?'baixo ('+ag.toFixed(0)+')':'normal ('+ag.toFixed(0)+')';
+    rows.unshift(['Ânion-gap',agTxt]);
+    if(ag>12){const dd=((ag-10)/(24-hco3));rows.push(['Delta/Delta',isFinite(dd)?dd.toFixed(2)+(dd<1?' (+ acidose hiperclorêmica)':dd>2?' (+ alcalose metab. ou resp. crônica)':' (AG puro)'):'—']);}
+  }
+  out.innerHTML=`<div class="lab">Interpretação</div><div class="big" style="font-size:21px">${prim}</div>
+    <div class="row"><span>Estado</span><span>${estado}</span></div>`+
+    rows.map(r=>`<div class="row"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('')+
+    `<div class="row" style="border-top:1px dashed var(--line)"><span style="color:var(--ink-faint)">Sempre correlacionar com a clínica.</span><span></span></div>`;
+}
+
+/* ============================================================
+   CASOS RESOLVIDOS
+   ============================================================ */
+VIEWS.resolved=function(){
+  const solved=PLANTAO.filter(c=>isSolved('plantao',c.id));
+  let h=topbar('Casos resolvidos','hub')+`<h1 class="lede" style="font-size:24px">Seu plantão até agora</h1>`;
+  h+=`<div class="scorebar">Plantão ${countSolved('plantao')}/${PLANTAO.length} · ECG ${countSolved('ecg')}/${ECG_ITEMS.length} · Gasometria ${countSolved('gaso')}/${GASO_ITEMS.length}</div>`;
+  if(!solved.length){
+    h+=`<p class="sub" style="margin-top:20px">Nenhum caso concluído ainda. Comece pelo <a onclick="go('plantaoList')" style="cursor:pointer">Plantão Sala Vermelha</a>.</p>`;
+  }else{
+    h+='<div class="list" style="margin-top:16px">'+solved.map(c=>`<button class="litem solved" onclick="startCase('${c.id}')">
+        <span class="t">${c.who}</span><span class="s">${topic(c.topic)} · rever</span></button>`).join('')+'</div>';
+  }
+  app.innerHTML=h;
+};
+
+/* ---------- boot ---------- */
+go('hub');
+</script>
+</body>
+</html>
